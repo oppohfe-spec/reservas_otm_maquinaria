@@ -53,14 +53,15 @@
   .ac-item:hover,.ac-item.sel{background:#eef7ff;}
   .chart-box{position:relative;height:260px;}
   .tabular{font-variant-numeric:tabular-nums;}
-  .bottom-nav{padding-bottom:env(safe-area-inset-bottom);}
-  .bottom-nav button.active{color:#0a6ed1;}
-  .bottom-nav button.active svg{stroke-width:2.2;}
+  .top-tabs button{border-bottom:2px solid transparent;}
+  .top-tabs button.active{color:#0a6ed1;border-color:#0a6ed1;}
+  .top-tabs button.active svg{stroke-width:2.2;}
+  .btn-limpiar:disabled{opacity:.4;cursor:default;}
   @media (max-width:1023px){
-    main{padding-bottom:calc(150px + env(safe-area-inset-bottom)) !important;}
-    #toastContainer{left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));}
+    main{padding-bottom:calc(96px + env(safe-area-inset-bottom)) !important;}
+    #toastContainer{left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));}
     #toastContainer .toast{max-width:none;}
-    #cartBar{bottom:calc(64px + env(safe-area-inset-bottom)) !important;}
+    #cartBar{bottom:calc(12px + env(safe-area-inset-bottom)) !important;}
   }
   @media (max-width:639px){
     input, select, textarea{font-size:16px !important;}
@@ -136,6 +137,15 @@
         </button>
       </div>
     </header>
+    <!-- Pestañas (celular y tablet): en la parte superior -->
+    <nav class="top-tabs lg:hidden sticky top-16 z-10 bg-white border-b border-ink-100 grid grid-cols-3 text-xs font-medium text-ink-500">
+      <button data-view="dashboard" onclick="navigate('dashboard')" class="flex items-center justify-center gap-1.5 h-11">
+        <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13h4v8H3zM10 8h4v13h-4zM17 3h4v18h-4z"/></svg>Dashboard</button>
+      <button data-view="otm" onclick="navigate('otm')" class="flex items-center justify-center gap-1.5 h-11">
+        <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>OTM</button>
+      <button data-view="stock" onclick="navigate('stock')" class="flex items-center justify-center gap-1.5 h-11">
+        <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-8.25-4.5L3.75 7.5m16.5 0l-8.25 4.5m8.25-4.5v9L12 21m0-9L3.75 7.5m8.25 4.5V21M3.75 7.5v9L12 21"/></svg>Stock</button>
+    </nav>
 
     <main class="flex-1 p-3 sm:p-4 lg:p-6 max-w-[1400px] w-full mx-auto">
       <div id="view-dashboard"></div>
@@ -148,15 +158,6 @@
 <!-- Barra de reserva en curso -->
 <div id="cartBar" class="hidden fixed z-20 bottom-4 left-3 right-3 lg:left-auto lg:right-6 lg:w-[420px]"></div>
 
-<!-- Navegación inferior (celular) -->
-<nav class="bottom-nav lg:hidden fixed bottom-0 inset-x-0 z-20 bg-white border-t border-ink-100 grid grid-cols-3 text-[11px] font-medium text-ink-500">
-  <button data-view="dashboard" onclick="navigate('dashboard')" class="flex flex-col items-center justify-center gap-0.5 h-16">
-    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13h4v8H3zM10 8h4v13h-4zM17 3h4v18h-4z"/></svg>Dashboard</button>
-  <button data-view="otm" onclick="navigate('otm')" class="flex flex-col items-center justify-center gap-0.5 h-16">
-    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>OTM</button>
-  <button data-view="stock" onclick="navigate('stock')" class="flex flex-col items-center justify-center gap-0.5 h-16">
-    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-8.25-4.5L3.75 7.5m16.5 0l-8.25 4.5m8.25-4.5v9L12 21m0-9L3.75 7.5m8.25 4.5V21M3.75 7.5v9L12 21"/></svg>Stock</button>
-</nav>
 
 <div id="toastContainer" class="fixed bottom-5 right-5 z-[70] flex flex-col gap-2"></div>
 <div id="modalRoot"></div>
@@ -166,7 +167,7 @@
 /* =========================================================
    CONFIGURACIÓN
    ========================================================= */
-const APP_VERSION = '1.0';   // subir en cada cambio (el Sheet rechaza versiones viejas)
+const APP_VERSION = '1.1';   // subir en cada cambio (el Sheet rechaza versiones viejas)
 const CONFIG = {
   // URL del Apps Script publicado ("Implementar > Nueva implementación > Aplicación web")
   API_URL: 'https://script.google.com/macros/s/AKfycbzYM6CxKzGyXwL-5c3UbWpH4RAifYVx5R7co2DjFgknQ7pIP52aYbaHRYdk9dl6SVJw/exec',
@@ -387,7 +388,7 @@ function navigate(view){
   if(!TITLES[view]) view = 'dashboard';
   document.querySelectorAll('[id^="view-"]').forEach(el=>el.classList.add('hidden'));
   document.getElementById('view-'+view).classList.remove('hidden');
-  document.querySelectorAll('.nav-link, .bottom-nav button').forEach(el=>el.classList.toggle('active', el.dataset.view===view));
+  document.querySelectorAll('.nav-link, .top-tabs button').forEach(el=>el.classList.toggle('active', el.dataset.view===view));
   document.getElementById('pageTitle').textContent = TITLES[view][0];
   document.getElementById('pageSubtitle').textContent = TITLES[view][1];
   lsSet('mq_vista', view);
@@ -409,9 +410,23 @@ function toast(msg, type='success'){
 }
 let modalRefresh = null;
 function abrirModal(html, onRefresh=null, ancho='max-w-2xl'){
+  const mismo = onRefresh && onRefresh === modalRefresh;   // re-pintado del mismo modal
   modalRefresh = onRefresh;
+  const panel = document.getElementById('modalPanel');
+  if(panel && panel.dataset.ancho === ancho && !mismo){ panel.innerHTML = html; panel.scrollTop = 0; paintCartBar(); return; }
+  if(panel && mismo){
+    /* Modal ya abierto: se cambia solo el contenido (sin animación ni salto de scroll)
+       y se conserva el campo en el que se estaba escribiendo. */
+    const act = document.activeElement, id = act && panel.contains(act) ? act.id : '';
+    const val = id ? act.value : null, s = id && act.selectionStart != null ? [act.selectionStart, act.selectionEnd] : null;
+    const top = panel.scrollTop;
+    panel.innerHTML = html;
+    panel.scrollTop = top;
+    if(id){ const el = document.getElementById(id); if(el){ if(val != null && el.value !== val) el.value = val; el.focus({preventScroll:true}); try{ if(s) el.setSelectionRange(s[0], s[1]); }catch(e){} } }
+    return;
+  }
   document.getElementById('modalRoot').innerHTML = `<div class="modal-backdrop fixed inset-0 z-40 flex items-center justify-center p-4" onmousedown="if(event.target===this) cerrarModal()">
-    <div class="modal-panel bg-white rounded-xl shadow-pop w-full ${ancho} max-h-[90vh] overflow-y-auto" id="modalPanel">${html}</div></div>`;
+    <div class="modal-panel bg-white rounded-xl shadow-pop w-full ${ancho} max-h-[90vh] overflow-y-auto" id="modalPanel" data-ancho="${ancho}">${html}</div></div>`;
   paintCartBar();
 }
 function cerrarModal(){ document.getElementById('modalRoot').innerHTML = ''; modalRefresh = null; renderVista(vistaActual()); paintCartBar(); }
@@ -510,9 +525,50 @@ function acTecla(e, id){
 function acElegir(id, i){ const cfg = AC[id]; const it = cfg.res[i]; if(!it) return; acCerrar(id); cfg.onPick(it.value); }
 function acCerrar(id){ const l = document.getElementById(id+'_list'); if(l) l.classList.add('hidden'); }
 
+/* Semanas lunes-domingo (hora Lima): actual + 3 anteriores como máximo */
+let SEM_F = lsGet('mq_sem_f') || 'todas';
+function numSemanaISO(iso){
+  const d = new Date(iso+'T00:00:00Z'); const dow = (d.getUTCDay()+6)%7;
+  d.setUTCDate(d.getUTCDate() - dow + 3);
+  return Math.ceil(((d - Date.UTC(d.getUTCFullYear(),0,1))/86400000 + 1)/7);
+}
+function semanasFiltro(){
+  const lunes = lunesDeISO(hoyLima());
+  return [0,1,2,3].map(i=>{ const ini = addDaysISO(lunes, -7*i); return {key:'s'+i, ini, fin:addDaysISO(ini,6), num:numSemanaISO(ini),
+    label: i===0 ? 'Semana actual' : i===1 ? 'Semana pasada' : `Hace ${i} semanas`}; });
+}
+function fechaOrdenISO(o){ return o && o.fecha ? isoDate(new Date(o.fecha)) : ''; }
+/* 'todas' = desde el lunes de hace 3 semanas en adelante (incluye fechas futuras) */
+function ordenEnSemana(o, key=SEM_F){
+  const sems = semanasFiltro(), f = fechaOrdenISO(o);
+  if(key === 'todas') return !f || f >= sems[3].ini;
+  const s = sems.find(x=>x.key===key);
+  return !!s && f >= s.ini && f <= s.fin;
+}
+function chipsSemanaHTML(acId){
+  const lib = ORDENES.filter(esAsignable);
+  const chip = (key, titulo, sub) => {
+    const n = lib.filter(o=>ordenEnSemana(o, key)).length, act = SEM_F===key;
+    return `<button type="button" onmousedown="event.preventDefault()" onclick="setSemana('${key}','${acId}')" class="shrink-0 px-2.5 py-1.5 rounded-lg text-left border ${act?'bg-ink-900 border-ink-900 text-white':'bg-white border-ink-200 text-ink-600 hover:bg-ink-50'}">
+      <span class="block text-[11px] font-semibold leading-tight">${titulo} <span class="${act?'text-ink-300':'text-ink-400'} font-normal">(${n})</span></span>
+      <span class="block text-[10px] ${act?'text-ink-300':'text-ink-400'} leading-tight">${sub}</span></button>`;
+  };
+  const sems = semanasFiltro();
+  return `<div id="${acId}_sem" class="flex flex-wrap gap-1.5 mb-2">
+    ${chip('todas', 'Últimas 4 sem.', `desde ${ddmm(sems[3].ini)}`)}
+    ${sems.map(s=>chip(s.key, `${s.label} · S${s.num}`, `${ddmm(s.ini)} – ${ddmm(s.fin)}`)).join('')}
+  </div>`;
+}
+function setSemana(key, acId){
+  SEM_F = key; lsSet('mq_sem_f', key);
+  const cont = document.getElementById(acId+'_sem');
+  if(cont) cont.outerHTML = chipsSemanaHTML(acId);
+  const inp = document.getElementById(acId);
+  if(inp){ inp.focus(); acFiltrar(acId); }
+}
 function itemsOrdenesLib(){
-  return ORDENES.filter(esAsignable).map(o=>({value:o.orden, q:o._q,
-    html:`<div class="flex items-center gap-2"><b class="text-ink-900">${esc(o.orden)}</b>${badgeTipo(o.tipo)}</div><div class="text-[11px] text-ink-500 truncate">${esc(o.texto)} · ${esc(o.denom)} · ${esc(o.ubic)}</div>`}));
+  return ORDENES.filter(o=> esAsignable(o) && ordenEnSemana(o)).map(o=>({value:o.orden, q:o._q,
+    html:`<div class="flex items-center gap-2"><b class="text-ink-900">${esc(o.orden)}</b>${badgeTipo(o.tipo)}<span class="ml-auto text-[11px] text-ink-400 whitespace-nowrap">inicio ${fmtDate(o.fecha)}</span></div><div class="text-[11px] text-ink-500 truncate">${esc(o.texto)} · ${esc(o.denom)} · ${esc(o.ubic)}</div>`}));
 }
 function itemsMateriales(){
   return STOCK.filter(m=> disponible(m.codigo) > 0).map(m=>({value:m.codigo, q:m._q,
@@ -545,6 +601,17 @@ function reservasFiltradas(){
     return true;
   });
 }
+const DF_DEF = {rango:'todo', desde:'', hasta:'', tipo:'', ubic:'', estado:''};
+const OF_DEF = {q:'', tipo:'', ubic:'', estado:'LIB', mat:''};
+const SF_DEF = {q:'', fam:'', um:'', orden:'valor', solo:'disp'};
+const difiere = (a, b) => Object.keys(b).some(k => (a[k]||'') !== (b[k]||''));
+function btnLimpiar(fn, activo){
+  return `<button onclick="${fn}()" ${activo?'':'disabled'} class="btn-limpiar flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-ink-200 bg-white text-xs font-medium text-ink-600 hover:bg-ink-50 whitespace-nowrap">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>Limpiar filtros</button>`;
+}
+function limpiarDF(){ DF = {...DF_DEF}; lsSet('mq_dash_f', DF); renderDashboard(); }
+function limpiarOF(){ OF = {...OF_DEF}; lsSet('mq_otm_f', OF); renderOTM(); }
+function limpiarSF(){ SF = {...SF_DEF}; stockPag = 1; lsSet('mq_stock_f', SF); renderStock(); }
 function setDF(k, v){ DF[k] = v; if(k==='rango' && v!=='custom'){ DF.desde=''; DF.hasta=''; } lsSet('mq_dash_f', DF); renderDashboard(); }
 function agrupar(rows, keyFn){ const m = {}; rows.forEach(r=>{ const k = keyFn(r) || '—'; const g = m[k] = m[k] || {k, gasto:0, cant:0, lineas:0, ordenes:new Set()}; g.gasto += r.total; g.cant += r.cantidad; g.lineas++; g.ordenes.add(r.orden); }); return Object.values(m).sort((a,b)=>b.gasto-a.gasto); }
 
@@ -571,6 +638,7 @@ function renderDashboard(){
     <div class="flex flex-wrap items-center gap-2">
       ${rangoBtn('hoy','Hoy')}${rangoBtn('semana','Semana')}${rangoBtn('mes','Mes')}${rangoBtn('30d','30 días')}${rangoBtn('todo','Todo')}${rangoBtn('custom','Rango')}
       ${DF.rango==='custom'?`<input type="date" value="${DF.desde}" onchange="setDF('desde',this.value)" class="rounded-lg border border-ink-200 px-2 py-1.5 text-xs"><span class="text-ink-400 text-xs">a</span><input type="date" value="${DF.hasta}" onchange="setDF('hasta',this.value)" class="rounded-lg border border-ink-200 px-2 py-1.5 text-xs">`:''}
+      <div class="ml-auto">${btnLimpiar('limpiarDF', difiere(DF, DF_DEF))}</div>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
       <select onchange="setDF('tipo',this.value)" class="${selCls}">${opciones(tipos, DF.tipo, 'Todos los tipos de OTM')}</select>
@@ -701,7 +769,8 @@ function exportarCSV(){
    OTM CREADAS
    ========================================================= */
 let OF = lsGet('mq_otm_f') || {q:'', tipo:'', ubic:'', estado:'LIB', mat:''};
-function setOF(k, v){ OF[k] = v; lsSet('mq_otm_f', OF); pintarListaOTM(); }
+function pintarBtnLimpiar(id, fn, activo){ const el = document.getElementById(id); if(el) el.innerHTML = btnLimpiar(fn, activo); }
+function setOF(k, v){ OF[k] = v; lsSet('mq_otm_f', OF); pintarListaOTM(); pintarBtnLimpiar('otmLimpiar','limpiarOF', difiere(OF, OF_DEF)); }
 function renderOTM(){
   const root = document.getElementById('view-otm');
   if(!CORE_OK && !ORDENES.length){ root.innerHTML = cargando('Cargando órdenes…'); return; }
@@ -725,6 +794,7 @@ function renderOTM(){
       <select onchange="setOF('mat',this.value)" class="${selCls}">
         <option value="" ${!OF.mat?'selected':''}>Con y sin materiales</option><option value="con" ${OF.mat==='con'?'selected':''}>Con materiales</option><option value="sin" ${OF.mat==='sin'?'selected':''}>Sin materiales</option></select>
     </div>
+    <div class="flex justify-end mt-2" id="otmLimpiar">${btnLimpiar('limpiarOF', difiere(OF, OF_DEF))}</div>
   </div>
   <p id="otmCount" class="text-xs text-ink-500 mb-2 px-1"></p>
   <div id="otmList" class="space-y-2"></div>`;
@@ -830,7 +900,7 @@ async function cambiarEstado(ids, estado){
    ========================================================= */
 let SF = lsGet('mq_stock_f') || {q:'', fam:'', um:'', orden:'valor', solo:'disp'};
 let stockPag = 1;
-function setSF(k, v){ SF[k] = v; stockPag = 1; lsSet('mq_stock_f', SF); pintarTablaStock(); }
+function setSF(k, v){ SF[k] = v; stockPag = 1; lsSet('mq_stock_f', SF); pintarTablaStock(); pintarBtnLimpiar('stkLimpiar','limpiarSF', difiere(SF, SF_DEF)); }
 function renderStock(){
   const root = document.getElementById('view-stock');
   if(!STOCK_OK){ root.innerHTML = cargando('Cargando stock MB52… (la primera vez puede tardar unos segundos)'); return; }
@@ -855,7 +925,8 @@ function renderStock(){
       <select onchange="setSF('solo',this.value)" class="${selCls}">
         <option value="disp" ${SF.solo==='disp'?'selected':''}>Con disponible</option><option value="" ${!SF.solo?'selected':''}>Todos</option><option value="comp" ${SF.solo==='comp'?'selected':''}>Con reservas pendientes</option></select>
     </div>
-    <p id="stockInfo" class="text-[11px] text-ink-400 mt-2">${horaStock()}</p>
+    <div class="flex items-center gap-2 mt-2"><p id="stockInfo" class="text-[11px] text-ink-400">${horaStock()}</p>
+      <div class="ml-auto" id="stkLimpiar">${btnLimpiar('limpiarSF', difiere(SF, SF_DEF))}</div></div>
   </div>
   <div id="stockTabla"></div>`;
   pintarTablaStock();
@@ -919,7 +990,7 @@ function asignarMaterial(codigo){
   const pintar = () => {
     const disp = disponible(codigo), car = enCarrito(codigo);
     const o = ORD_MAP[ordenSel];
-    AC.acOrd = {items: itemsOrdenesLib, vacio:`Sin órdenes ${CONFIG.ESTADO_ASIGNABLE} que coincidan`, onPick: v=>{ ordenSel = v; pintar(); setTimeout(()=>{ const c = document.getElementById('amCant'); if(c) c.focus(); }, 50); }};
+    AC.acOrd = {items: itemsOrdenesLib, vacio:`Sin órdenes ${CONFIG.ESTADO_ASIGNABLE} que coincidan en el periodo elegido`, onPick: v=>{ ordenSel = v; pintar(); setTimeout(()=>{ const c = document.getElementById('amCant'); if(c) c.focus(); }, 50); }};
     abrirModal(`${modalHeader('Asignar material a una OTM', `${esc(m.codigo)} · ${esc(m.desc)}`)}
       <div class="p-5 space-y-4">
         <div class="grid grid-cols-3 gap-2 text-xs bg-ink-50 rounded-lg p-3">
@@ -932,7 +1003,7 @@ function asignarMaterial(codigo){
           ${o ? `<div class="mt-1 flex items-center gap-2 border border-brand-200 bg-brand-50/50 rounded-lg px-3 py-2">
               <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink-900">${esc(o.orden)} · ${esc(o.texto)}</p><p class="text-[11px] text-ink-500 truncate">${esc(o.denom)} · ${esc(o.ubic)}</p></div>
               <button onclick="window.__amCambiar()" class="text-xs text-brand-700 font-medium hover:underline">Cambiar</button></div>`
-            : `<div class="mt-1">${acHTML('acOrd','Buscar orden, equipo o texto…')}</div>`}
+            : `<div class="mt-1">${chipsSemanaHTML('acOrd')}${acHTML('acOrd','Buscar orden, equipo o texto…')}</div>`}
         </div>
         <div>
           <label class="text-xs font-medium text-ink-600">Cantidad (${esc(m.um)})</label>
@@ -1004,7 +1075,7 @@ function abrirCarrito(){
   const pintar = () => {
     const o = ORD_MAP[CART.orden];
     AC.acMat = {items: itemsMateriales, vacio: STOCK_OK ? 'Sin materiales con disponible que coincidan' : 'Cargando stock…', onPick: v=>{ agregarItem(v); }};
-    AC.acOrdC = {items: itemsOrdenesLib, vacio:`Sin órdenes ${CONFIG.ESTADO_ASIGNABLE} que coincidan`, onPick: v=>{ CART.orden = v; CART.token=''; guardarCart(); pintar(); }};
+    AC.acOrdC = {items: itemsOrdenesLib, vacio:`Sin órdenes ${CONFIG.ESTADO_ASIGNABLE} que coincidan en el periodo elegido`, onPick: v=>{ CART.orden = v; CART.token=''; guardarCart(); pintar(); }};
     let total = 0, hayError = false;
     const filas = CART.items.map((it, i)=>{
       const m = STOCK_MAP[it.codigo] || {desc:'(material sin stock en MB52)', um:'', cu:0};
@@ -1014,9 +1085,9 @@ function abrirCarrito(){
       total += sub;
       return `<div class="flex items-center gap-2 py-2.5 border-b border-ink-50">
         <div class="min-w-0 flex-1"><p class="text-sm font-medium text-ink-800 truncate">${esc(m.desc)}</p>
-          <p class="text-[11px] ${err?'text-red-600 font-medium':'text-ink-400'}">${esc(it.codigo)} · disp. ${num(disp)} ${esc(m.um)} · ${money(m.cu)}/${esc(m.um)}</p></div>
-        <input type="number" inputmode="decimal" min="0" step="any" value="${it.cantidad}" onchange="setCantidad(${i}, this.value)" class="w-20 rounded-lg border ${err?'border-red-300':'border-ink-200'} px-2 py-1.5 text-sm text-right tabular">
-        <span class="w-24 text-right text-sm font-semibold tabular">${money(sub)}</span>
+          <p id="ci_info_${i}" class="text-[11px] ${err?'text-red-600 font-medium':'text-ink-400'}">${esc(it.codigo)} · disp. ${num(disp)} ${esc(m.um)} · ${money(m.cu)}/${esc(m.um)}</p></div>
+        <input id="ci_q_${i}" type="number" inputmode="decimal" min="0" step="any" value="${it.cantidad}" oninput="setCantidad(${i}, this.value)" class="w-20 rounded-lg border ${err?'border-red-300':'border-ink-200'} px-2 py-1.5 text-sm text-right tabular">
+        <span id="ci_sub_${i}" class="w-24 text-right text-sm font-semibold tabular">${money(sub)}</span>
         <button onclick="quitarItem(${i})" class="p-1.5 text-ink-400 hover:text-red-600" aria-label="Quitar">${IC.trash}</button></div>`;
     }).join('');
     abrirModal(`${modalHeader('Reserva de materiales', 'Asigna materiales del stock a una orden de mantenimiento')}
@@ -1027,7 +1098,7 @@ function abrirCarrito(){
               <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink-900 flex flex-wrap items-center gap-2">${esc(o.orden)} ${badgeTipo(o.tipo)} ${badgeEstadoOrden(o)}</p>
               <p class="text-xs text-ink-700">${esc(o.texto)}</p><p class="text-[11px] text-ink-500 truncate">${esc(o.equipo)} · ${esc(o.denom)} · ${esc(o.ubic)}</p></div>
               <button onclick="CART.orden='';CART.token='';guardarCart();refrescarModal()" class="text-xs text-brand-700 font-medium hover:underline">Cambiar</button></div>`
-            : `<div class="mt-1">${acHTML('acOrdC','Buscar orden, equipo o texto…')}</div>`}
+            : `<div class="mt-1">${chipsSemanaHTML('acOrdC')}${acHTML('acOrdC','Buscar orden, equipo o texto…')}</div>`}
         </div>
         <div>
           <label class="text-xs font-medium text-ink-600">Agregar material del stock</label>
@@ -1035,7 +1106,7 @@ function abrirCarrito(){
         </div>
         <div>
           ${CART.items.length ? filas : `<div class="text-center text-xs text-ink-400 py-6 border border-dashed border-ink-200 rounded-lg">Aún no hay materiales en esta reserva</div>`}
-          ${CART.items.length ? `<div class="flex justify-between items-center pt-3"><span class="text-xs text-ink-500">${CART.items.length} material(es)</span><span class="text-base font-bold text-ink-900 tabular">Total ${money(total)}</span></div>`:''}
+          ${CART.items.length ? `<div class="flex justify-between items-center pt-3"><span class="text-xs text-ink-500">${CART.items.length} material(es)</span><span id="cartTotal" class="text-base font-bold text-ink-900 tabular">Total ${money(total)}</span></div>`:''}
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div><label class="text-xs font-medium text-ink-600">Solicitante *</label>
@@ -1044,11 +1115,14 @@ function abrirCarrito(){
             <input id="cCom" value="${esc(CART.comentario||'')}" onchange="CART.comentario=this.value;guardarCart()" placeholder="Opcional" class="${selCls} mt-1"></div>
         </div>
         <div class="flex flex-col sm:flex-row gap-2 pt-1">
-          ${CART.items.length?`<button onclick="vaciarCarrito()" class="px-4 py-2.5 rounded-lg border border-ink-200 text-sm text-ink-500 hover:bg-ink-50">Vaciar</button>`:''}
+          <div class="flex gap-2">
+            <button onclick="cerrarModal()" title="Cerrar sin registrar (la reserva en curso se conserva)" class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg border border-ink-200 text-sm text-ink-600 hover:bg-ink-50">Cancelar</button>
+            ${CART.items.length?`<button onclick="vaciarCarrito()" class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg border border-red-200 text-sm text-red-600 hover:bg-red-50">Vaciar</button>`:''}
+          </div>
           <button data-guardar ${(!CART.items.length||hayError||!o)?'disabled':''} onclick="registrarReserva(false)" class="sm:ml-auto px-4 py-2.5 rounded-lg border border-brand-200 text-brand-700 text-sm font-medium hover:bg-brand-50 disabled:opacity-40">Solo registrar</button>
           <button data-guardar ${(!CART.items.length||hayError||!o)?'disabled':''} onclick="registrarReserva(true)" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium disabled:opacity-40">${iconWhatsapp()} Registrar y enviar por WhatsApp</button>
         </div>
-        ${hayError?`<p class="text-[11px] text-red-600">Hay cantidades que superan el disponible o son 0. Corrígelas para registrar.</p>`:''}
+        <p id="cartErr" class="text-[11px] text-red-600 ${hayError?'':'hidden'}">Hay cantidades que superan el disponible o son 0. Corrígelas para registrar.</p>
       </div>`, pintar);
     if(!o) setTimeout(()=>document.getElementById('acOrdC')?.focus(), 60);
   };
@@ -1058,10 +1132,32 @@ function abrirCarrito(){
 function agregarItem(codigo){
   const m = STOCK_MAP[codigo]; if(!m) return;
   if(!CART.items.find(x=>x.codigo===codigo)) CART.items.push({codigo, cantidad: Math.min(1, disponible(codigo))});
+  const inp = document.getElementById('acMat'); if(inp) inp.value = '';   // limpia el buscador para el siguiente material
   guardarCart(); refrescarModal();
   setTimeout(()=>{ const ins = document.querySelectorAll('#modalPanel input[type=number]'); const i = CART.items.findIndex(x=>x.codigo===codigo); if(ins[i]){ ins[i].focus(); ins[i].select(); } }, 50);
 }
-function setCantidad(i, v){ CART.items[i].cantidad = round3(Number(v)||0); guardarCart(); refrescarModal(); }
+/* Cambia la cantidad SIN volver a pintar el modal: actualiza solo subtotal, total y validaciones */
+function setCantidad(i, v){
+  const it = CART.items[i]; if(!it) return;
+  it.cantidad = round3(Number(v)||0);
+  guardarCart();
+  let total = 0, hayError = false;
+  CART.items.forEach((x, k)=>{
+    const m = STOCK_MAP[x.codigo] || {cu:0};
+    const err = !(x.cantidad > 0) || x.cantidad > disponible(x.codigo);
+    if(err) hayError = true;
+    total += x.cantidad * (m.cu||0);
+    const sub = document.getElementById('ci_sub_'+k); if(sub) sub.textContent = money(x.cantidad * (m.cu||0));
+    const info = document.getElementById('ci_info_'+k);
+    if(info){ info.classList.toggle('text-red-600', err); info.classList.toggle('font-medium', err); info.classList.toggle('text-ink-400', !err); }
+    const q = document.getElementById('ci_q_'+k);
+    if(q){ q.classList.toggle('border-red-300', err); q.classList.toggle('border-ink-200', !err); }
+  });
+  const t = document.getElementById('cartTotal'); if(t) t.textContent = 'Total '+money(total);
+  const e = document.getElementById('cartErr'); if(e) e.classList.toggle('hidden', !hayError);
+  const bloquear = !CART.items.length || hayError || !ORD_MAP[CART.orden];
+  if(!guardando) document.querySelectorAll('#modalPanel [data-guardar]').forEach(b=> b.disabled = bloquear);
+}
 function quitarItem(i){ CART.items.splice(i,1); guardarCart(); refrescarModal(); }
 async function vaciarCarrito(){ if(await confirmar('¿Vaciar la reserva en curso?', 'Vaciar', true)){ CART = {orden:CART.orden, items:[], token:''}; guardarCart(); refrescarModal(); } }
 function setGuardando(v){ guardando = v; document.querySelectorAll('[data-guardar]').forEach(b=>{ b.disabled = v; if(v) b.dataset.txt = b.innerHTML, b.innerHTML = 'Guardando…'; else if(b.dataset.txt) b.innerHTML = b.dataset.txt; }); }
