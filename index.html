@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#111826">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>Reservas Maquinaria · Mantenimiento</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'] },
+        colors: {
+          brand: {
+            50:'#eef7ff',100:'#d9edff',200:'#b7dcff',300:'#84c4ff',400:'#4aa4ff',
+            500:'#1f83f7',600:'#0a6ed1',700:'#0857a8',800:'#0a4a88',900:'#0d3d6e'
+          },
+          ink:{50:'#f4f6f8',100:'#e8ecf1',200:'#d3dae3',300:'#aab7c4',400:'#7c8b9b',
+               500:'#5a6b7d',600:'#425063',700:'#2e394a',800:'#1c2534',900:'#111826'}
+        },
+        boxShadow: {
+          card: '0 1px 2px rgba(17,24,38,0.06), 0 1px 1px rgba(17,24,38,0.04)',
+          pop: '0 8px 24px rgba(17,24,38,0.12)'
+        }
+      }
+    }
+  }
+</script>
+<style>
+  html,body{height:100%;font-family:'Inter',ui-sans-serif,system-ui;}
+  body{background:#f4f6f8;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:#c7d0da;border-radius:8px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  .nav-link{position:relative;}
+  .nav-link.active{background:rgba(255,255,255,0.08);color:#fff;}
+  .nav-link.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:#4aa4ff;border-radius:0 3px 3px 0;}
+  .kpi-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .modal-backdrop{background:rgba(17,24,38,0.55);backdrop-filter: blur(2px);}
+  .modal-panel{animation:pop .18s ease-out;}
+  @keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+  .toast{animation:toastin .25s ease-out}
+  @keyframes toastin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  input:focus, select:focus, textarea:focus{outline:none;box-shadow:0 0 0 3px rgba(10,110,209,0.15);border-color:#0a6ed1;}
+  .ac-list{position:absolute;z-index:40;margin-top:4px;width:100%;background:#fff;border:1px solid #d3dae3;border-radius:10px;box-shadow:0 8px 24px rgba(17,24,38,0.12);max-height:16rem;overflow-y:auto;}
+  .ac-item{padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f4f6f8;}
+  .ac-item:hover,.ac-item.sel{background:#eef7ff;}
+  .chart-box{position:relative;height:260px;}
+  .tabular{font-variant-numeric:tabular-nums;}
+  .bottom-nav{padding-bottom:env(safe-area-inset-bottom);}
+  .bottom-nav button.active{color:#0a6ed1;}
+  .bottom-nav button.active svg{stroke-width:2.2;}
+  @media (max-width:1023px){
+    main{padding-bottom:calc(150px + env(safe-area-inset-bottom)) !important;}
+    #toastContainer{left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));}
+    #toastContainer .toast{max-width:none;}
+    #cartBar{bottom:calc(64px + env(safe-area-inset-bottom)) !important;}
+  }
+  @media (max-width:639px){
+    input, select, textarea{font-size:16px !important;}
+    .modal-backdrop{align-items:flex-end !important;padding:0 !important;}
+    .modal-panel{max-width:100% !important;width:100%;border-radius:16px 16px 0 0 !important;max-height:92vh !important;
+      overflow-y:auto;padding-bottom:env(safe-area-inset-bottom);animation:sheetin .22s ease-out;}
+    @keyframes sheetin{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+    .chart-box{height:230px;}
+  }
+</style>
+</head>
+<body class="text-ink-800 antialiased">
+
+<div id="app" class="min-h-screen flex">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="fixed z-30 inset-y-0 left-0 w-64 bg-ink-900 text-ink-200 flex flex-col -translate-x-full lg:translate-x-0 transition-transform duration-200">
+    <div class="h-16 flex items-center gap-2 px-5 border-b border-white/10">
+      <div class="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center font-bold text-white text-sm">MQ</div>
+      <div>
+        <p class="text-white font-semibold text-sm leading-tight">Reservas Maquinaria</p>
+        <p class="text-[11px] text-ink-400 leading-tight">Mantenimiento · SAP PM</p>
+      </div>
+      <button onclick="toggleSidebar()" class="ml-auto lg:hidden text-ink-400 hover:text-white" aria-label="Cerrar menú">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
+      <button data-view="dashboard" onclick="navigate('dashboard')" class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 text-left">
+        <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13h4v8H3zM10 8h4v13h-4zM17 3h4v18h-4z"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button data-view="otm" onclick="navigate('otm')" class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 text-left">
+        <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085"/></svg>
+        <span>OTM creadas</span>
+      </button>
+      <button data-view="stock" onclick="navigate('stock')" class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 text-left">
+        <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-8.25-4.5L3.75 7.5m16.5 0l-8.25 4.5m8.25-4.5v9L12 21m0-9L3.75 7.5m8.25 4.5V21M3.75 7.5v9L12 21"/></svg>
+        <span>Stock</span>
+      </button>
+    </nav>
+    <div class="px-3 pb-3">
+      <div class="rounded-lg bg-white/5 p-3">
+        <p class="text-[11px] font-semibold text-ink-300 uppercase tracking-wide mb-2">Cómo se usa</p>
+        <p class="text-[11px] text-ink-400 leading-relaxed">Elige una OTM en estado <b class="text-ink-200">LIB.</b> o un material del stock, arma la reserva y regístrala. El resumen sale por WhatsApp.</p>
+      </div>
+    </div>
+    <div class="p-3 border-t border-white/10">
+      <p id="syncStatus" class="px-3 text-[11px] text-ink-400"></p>
+      <p id="appVersion" class="px-3 text-[10px] text-ink-500 mt-1"></p>
+    </div>
+  </aside>
+  <div id="sidebarOverlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/40 z-20 lg:hidden"></div>
+
+  <!-- MAIN -->
+  <div class="flex-1 lg:ml-64 flex flex-col min-h-screen min-w-0">
+    <header class="h-16 sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-ink-100 flex items-center gap-3 px-4 lg:px-6">
+      <button onclick="toggleSidebar()" class="lg:hidden text-ink-500 hover:text-ink-800" aria-label="Menú">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>
+      </button>
+      <div class="min-w-0">
+        <h1 id="pageTitle" class="text-base lg:text-lg font-semibold text-ink-900 truncate">Dashboard</h1>
+        <p id="pageSubtitle" class="text-xs text-ink-400 hidden sm:block truncate"></p>
+      </div>
+      <div class="ml-auto flex items-center gap-2">
+        <button onclick="recargarTodo()" title="Actualizar datos desde el Sheet" class="p-2 rounded-lg text-ink-500 hover:bg-ink-50 hover:text-ink-800">
+          <svg id="icoSync" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+        </button>
+        <button onclick="abrirCarrito()" class="relative flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-3 py-2 rounded-lg shadow-card">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/></svg>
+          <span class="hidden sm:inline">Reserva</span>
+          <span id="cartBadge" class="hidden min-w-[20px] h-5 px-1 rounded-full bg-white text-brand-700 text-[11px] font-bold flex items-center justify-center">0</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="flex-1 p-3 sm:p-4 lg:p-6 max-w-[1400px] w-full mx-auto">
+      <div id="view-dashboard"></div>
+      <div id="view-otm" class="hidden"></div>
+      <div id="view-stock" class="hidden"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Barra de reserva en curso -->
+<div id="cartBar" class="hidden fixed z-20 bottom-4 left-3 right-3 lg:left-auto lg:right-6 lg:w-[420px]"></div>
+
+<!-- Navegación inferior (celular) -->
+<nav class="bottom-nav lg:hidden fixed bottom-0 inset-x-0 z-20 bg-white border-t border-ink-100 grid grid-cols-3 text-[11px] font-medium text-ink-500">
+  <button data-view="dashboard" onclick="navigate('dashboard')" class="flex flex-col items-center justify-center gap-0.5 h-16">
+    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13h4v8H3zM10 8h4v13h-4zM17 3h4v18h-4z"/></svg>Dashboard</button>
+  <button data-view="otm" onclick="navigate('otm')" class="flex flex-col items-center justify-center gap-0.5 h-16">
+    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>OTM</button>
+  <button data-view="stock" onclick="navigate('stock')" class="flex flex-col items-center justify-center gap-0.5 h-16">
+    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-8.25-4.5L3.75 7.5m16.5 0l-8.25 4.5m8.25-4.5v9L12 21m0-9L3.75 7.5m8.25 4.5V21M3.75 7.5v9L12 21"/></svg>Stock</button>
+</nav>
+
+<div id="toastContainer" class="fixed bottom-5 right-5 z-[70] flex flex-col gap-2"></div>
+<div id="modalRoot"></div>
+<div id="confirmRoot"></div>
+
+<script>
+/* =========================================================
+   CONFIGURACIÓN
+   ========================================================= */
+const APP_VERSION = '1.0';   // subir en cada cambio (el Sheet rechaza versiones viejas)
+const CONFIG = {
+  // URL del Apps Script publicado ("Implementar > Nueva implementación > Aplicación web")
+  API_URL: 'https://script.google.com/macros/s/AKfycbzYM6CxKzGyXwL-5c3UbWpH4RAifYVx5R7co2DjFgknQ7pIP52aYbaHRYdk9dl6SVJw/exec',
+  // Número de WhatsApp destino con código de país, sin + ni espacios (ej. '51987654321').
+  // Vacío = WhatsApp pregunta a qué contacto o grupo enviar.
+  WHATSAPP_NUMERO: '',
+  ESTADO_ASIGNABLE: 'LIB.',
+  MONEDA: 'S/',
+  PAGE_SIZE: 50,
+};
+
+const sleep = ms => new Promise(r=>setTimeout(r, ms));
+
+/* fetch con tiempo límite (sin AbortController: algunos WebViews no lo clonan) */
+function fetchTimeout(url, opts={}, ms=45000){
+  let t;
+  const limite = new Promise((_, rej)=>{ t = setTimeout(()=>{ const e = new Error('Tiempo de espera agotado'); e.name='AbortError'; rej(e); }, ms); });
+  return Promise.race([fetch(url, opts), limite]).finally(()=>clearTimeout(t));
+}
+/* GET con anti-caché + reintentos (evita el 404 intermitente de la redirección de Apps Script) */
+async function apiGet(action='snapshot', intentos=3){
+  let ultimoError;
+  for(let i=0;i<intentos;i++){
+    try{
+      const url = `${CONFIG.API_URL}?action=${action}&_=${Date.now()}_${i}`;
+      const res = await fetchTimeout(url, {method:'GET', cache:'no-store', redirect:'follow'});
+      if(!res.ok) throw new Error('No se pudo leer el Sheet ('+res.status+')');
+      const data = await res.json();
+      if(!data.ok) throw new Error(data.error || 'Error desconocido leyendo el Sheet');
+      return data;
+    }catch(err){
+      ultimoError = err.name==='AbortError' ? new Error('Tiempo de espera agotado') : err;
+      if(i < intentos-1) await sleep(800*(i+1));
+    }
+  }
+  throw ultimoError;
+}
+async function apiPost(action, payload, intentos=2){
+  let ultimoError;
+  for(let i=0;i<intentos;i++){
+    try{
+      // text/plain evita el preflight CORS que Apps Script no responde
+      const res = await fetchTimeout(CONFIG.API_URL, {
+        method:'POST', cache:'no-store',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({action, payload, v: APP_VERSION})
+      }, 90000);
+      if(!res.ok) throw new Error('Error del servidor ('+res.status+')');
+      const data = await res.json();
+      if(!data.ok) throw new Error(data.error || 'Error desconocido guardando en el Sheet');
+      return data;
+    }catch(err){
+      ultimoError = err.name==='AbortError' ? new Error('Tiempo de espera agotado') : err;
+      if(/versión antigua/i.test(ultimoError.message)) mostrarAvisoVersion();
+      if(!/servidor|Failed to fetch|Tiempo|NetworkError|Load failed/i.test(ultimoError.message)) break;  // error de negocio: no reintentar
+      if(i < intentos-1) await sleep(1000);
+    }
+  }
+  throw ultimoError;
+}
+function mostrarAvisoVersion(){
+  if(document.getElementById('avisoVersion')) return;
+  document.body.insertAdjacentHTML('afterbegin', `<div id="avisoVersion" class="fixed top-0 inset-x-0 z-[80] bg-amber-500 text-white text-sm font-medium px-4 py-2.5 flex items-center justify-center gap-3">
+    Hay una versión nueva de la app.
+    <button onclick="location.reload()" class="px-3 py-1 rounded-md bg-white text-amber-700 text-xs font-semibold">Actualizar ahora</button></div>`);
+}
+function compararVersion(a, b){
+  const pa = String(a).split('.').map(Number), pb = String(b).split('.').map(Number);
+  for(let i=0;i<Math.max(pa.length,pb.length);i++){ const x=pa[i]||0, y=pb[i]||0; if(x!==y) return x<y?-1:1; }
+  return 0;
+}
+
+/* =========================================================
+   UTILIDADES
+   ========================================================= */
+const TZ = 'America/Lima';
+const _fmtISO = new Intl.DateTimeFormat('en-CA',{timeZone:TZ, year:'numeric', month:'2-digit', day:'2-digit'});
+function isoDate(d){ return _fmtISO.format(d); }
+function hoyLima(){ return isoDate(new Date()); }
+function addDaysISO(iso, n){ const d = new Date(iso+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); }
+function lunesDeISO(iso){ const d = new Date(iso+'T00:00:00Z'); const dow = (d.getUTCDay()+6)%7; return addDaysISO(iso, -dow); }
+function fmtDate(d){ if(!d) return '—'; d = new Date(d); return isNaN(d) ? '—' : d.toLocaleDateString('es-PE',{timeZone:TZ, day:'2-digit',month:'2-digit',year:'numeric'}); }
+function fmtDateTime(d){ if(!d) return '—'; d = new Date(d); return isNaN(d) ? '—' : d.toLocaleString('es-PE',{timeZone:TZ, day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}); }
+const ddmm = iso => iso.slice(8,10)+'/'+iso.slice(5,7);
+const _money = new Intl.NumberFormat('es-PE',{minimumFractionDigits:2, maximumFractionDigits:2});
+const _num = new Intl.NumberFormat('es-PE',{maximumFractionDigits:3});
+function money(n){ return CONFIG.MONEDA+' '+_money.format(Number(n)||0); }
+function moneyK(n){ n = Number(n)||0; return Math.abs(n) >= 1e6 ? CONFIG.MONEDA+' '+(n/1e6).toFixed(2)+' M' : Math.abs(n) >= 1e4 ? CONFIG.MONEDA+' '+(n/1e3).toFixed(1)+' k' : money(n); }
+function num(n){ return _num.format(Number(n)||0); }
+function pct(a, b){ return b ? Math.round(a*1000/b)/10 + '%' : '—'; }
+function norm(s){ return String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
+function tokens(q){ return norm(q).split(/[\s,;]+/).filter(Boolean); }
+function coincide(hay, toks){ return toks.every(t => hay.includes(t)); }
+function jsq(s){ return String(s ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+function esc(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function lsGet(k){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function uid(){ try{ return crypto.randomUUID(); }catch(e){ return Date.now().toString(36)+Math.random().toString(36).slice(2); } }
+function familia(cod){ const m = String(cod).match(/^[A-Za-z]+/); return m ? m[0].toUpperCase() : 'OTROS'; }
+function round3(n){ return Math.round(n*1000)/1000; }
+
+/* =========================================================
+   ESTADO
+   ========================================================= */
+let ORDENES = [];      // IW38
+let ORD_MAP = {};
+let STOCK = [];        // MB52 (solo con stock > 0)
+let STOCK_MAP = {};
+let RESERVAS = [];     // líneas de la hoja RESERVAS
+let COMPROMETIDO = {}; // material -> cantidad en reservas Pendiente
+let POR_ORDEN = {};    // orden -> {gasto, lineas, reservas:Set}
+let CORE_OK = false, STOCK_OK = false;
+let stockCargando = null;
+let stockHora = 0;
+let CART = lsGet('mq_cart') || {orden:'', items:[], token:''};
+let SOLICITANTE = lsGet('mq_solicitante') || '';
+
+const TIPO_COLOR = {'OTM PREVENTIVA':'#059669','OTM CORRECTIVA':'#dc2626','OTM MEJORA':'#7c3aed'};
+const ESTADO_RES_CLS = {Pendiente:'bg-amber-50 text-amber-700 ring-amber-200', Atendida:'bg-emerald-50 text-emerald-700 ring-emerald-200', Anulada:'bg-ink-100 text-ink-500 ring-ink-200'};
+const esAsignable = o => o && String(o.estado).toUpperCase() === CONFIG.ESTADO_ASIGNABLE;
+const activa = r => r.estado !== 'Anulada';
+
+function aplicarCore(d){
+  if(d.estadoAsignable) CONFIG.ESTADO_ASIGNABLE = d.estadoAsignable;
+  ORDENES = (d.ordenes||[]).map(o=>({...o, orden:String(o.orden), _q: norm([o.orden,o.texto,o.equipo,o.denom,o.ubic,o.tipo].join(' '))}));
+  ORDENES.sort((a,b)=> String(b.fecha||'').localeCompare(String(a.fecha||'')) || b.orden.localeCompare(a.orden));
+  ORD_MAP = {}; ORDENES.forEach(o=> ORD_MAP[o.orden] = o);
+  RESERVAS = (d.reservas||[]).map(r=>({...r}));
+  CORE_OK = true;
+  recalcular();
+}
+function aplicarStock(lista){
+  STOCK = (lista||[]).map(m=> Array.isArray(m)
+    ? {codigo:String(m[0]), desc:String(m[1]||''), um:String(m[2]||''), stock:Number(m[3])||0, valor:Number(m[4])||0, moneda:m[5]||'PEN'}
+    : m);
+  STOCK.forEach(m=>{ m.cu = m.stock ? m.valor/m.stock : 0; m.fam = familia(m.codigo); m._q = norm(m.codigo+' '+m.desc); });
+  STOCK_MAP = {}; STOCK.forEach(m=> STOCK_MAP[m.codigo] = m);
+  STOCK_OK = true;
+}
+function recalcular(){
+  COMPROMETIDO = {}; POR_ORDEN = {};
+  RESERVAS.forEach(r=>{
+    if(r.estado === 'Pendiente') COMPROMETIDO[r.material] = (COMPROMETIDO[r.material]||0) + r.cantidad;
+    if(!activa(r)) return;
+    const p = POR_ORDEN[r.orden] = POR_ORDEN[r.orden] || {gasto:0, lineas:0, reservas:new Set()};
+    p.gasto += r.total; p.lineas++; p.reservas.add(r.reserva);
+  });
+}
+/** Disponible = stock MB52 − reservas Pendiente (sin contar lo que está en la reserva en curso) */
+function disponible(cod){ const m = STOCK_MAP[cod]; return m ? round3(m.stock - (COMPROMETIDO[cod]||0)) : 0; }
+function enCarrito(cod){ const it = CART.items.find(x=>x.codigo===cod); return it ? it.cantidad : 0; }
+
+/* =========================================================
+   CARGA
+   ========================================================= */
+function paintSync(txt){ const el = document.getElementById('syncStatus'); if(el) el.textContent = txt||''; }
+async function initApp(){
+  document.getElementById('appVersion').textContent = 'v'+APP_VERSION;
+  const cCore = lsGet('mq_cache_core'), cStock = lsGet('mq_cache_stock');
+  if(cStock) aplicarStock(cStock);
+  if(cCore){ aplicarCore(cCore); CORE_OK = false; paintSync('Actualizando datos…'); }
+  navigate(lsGet('mq_vista') || 'dashboard');
+  paintCartBar();
+  try{
+    await cargarCore();
+    cargarStock();
+  }catch(err){
+    if(cCore){ paintSync('Sin conexión: mostrando últimos datos'); toast('No se pudo actualizar desde el Sheet: '+err.message, 'error'); return; }
+    console.error(err);
+    document.getElementById('view-'+vistaActual()).innerHTML = `<div class="bg-white rounded-xl shadow-card border border-red-200 p-6 text-sm text-red-700">
+      No se pudo cargar la información desde el Sheet.<br><span class="text-ink-500">${esc(err.message)}</span><br><br>
+      Verifica que <code>CONFIG.API_URL</code> apunte a tu Apps Script publicado y que el acceso esté configurado como "Cualquier usuario".
+      <div class="mt-3"><button onclick="initApp()" class="px-3 py-1.5 rounded-lg bg-brand-600 text-white text-xs font-medium">Reintentar</button></div></div>`;
+  }
+}
+async function cargarCore(){
+  const d = await apiGet('core');
+  if(d.minAppVersion && compararVersion(APP_VERSION, d.minAppVersion) < 0) mostrarAvisoVersion();
+  aplicarCore(d);
+  lsSet('mq_cache_core', {ordenes:d.ordenes, reservas:d.reservas, estadoAsignable:d.estadoAsignable});
+  paintSync('Datos al '+new Date().toLocaleTimeString('es-PE',{timeZone:TZ,hour:'2-digit',minute:'2-digit'}));
+  refrescarVista();
+}
+function cargarStock(maxEdadMs=0){
+  if(stockCargando) return stockCargando;
+  if(maxEdadMs && STOCK_OK && Date.now()-stockHora < maxEdadMs) return Promise.resolve();
+  const st = document.getElementById('stockInfo'); if(st) st.textContent = 'Actualizando stock…';
+  stockCargando = (async ()=>{
+    try{
+      const d = await apiGet('materiales');
+      stockHora = Date.now();
+      aplicarStock(d.materiales);
+      lsSet('mq_cache_stock', d.materiales);
+      refrescarVista();
+    }catch(err){ console.error(err); toast('No se pudo actualizar el stock: '+err.message, 'error'); }
+    finally{ stockCargando = null; const s2 = document.getElementById('stockInfo'); if(s2) s2.textContent = horaStock(); }
+  })();
+  return stockCargando;
+}
+function horaStock(){ return stockHora ? 'Stock leído a las '+new Date(stockHora).toLocaleTimeString('es-PE',{timeZone:TZ,hour:'2-digit',minute:'2-digit'}) : (STOCK_OK ? 'Stock de la última sesión' : 'Cargando stock…'); }
+async function recargarTodo(){
+  const ico = document.getElementById('icoSync'); ico.classList.add('animate-spin');
+  try{ await cargarCore(); await cargarStock(); toast('Datos actualizados', 'info'); }
+  catch(err){ toast('No se pudo actualizar: '+err.message, 'error'); }
+  finally{ ico.classList.remove('animate-spin'); }
+}
+
+/* =========================================================
+   NAVEGACIÓN / UI BASE
+   ========================================================= */
+const TITLES = {
+  dashboard:['Dashboard','Gasto de materiales asignados a órdenes de mantenimiento'],
+  otm:['OTM creadas','Órdenes IW38 · asigna materiales solo a órdenes en estado LIB.'],
+  stock:['Stock','Stock MB52 disponible · asigna materiales a una OTM existente'],
+};
+function vistaActual(){ const v = document.querySelector('[id^="view-"]:not(.hidden)'); return v ? v.id.replace('view-','') : 'dashboard'; }
+function navigate(view){
+  if(!TITLES[view]) view = 'dashboard';
+  document.querySelectorAll('[id^="view-"]').forEach(el=>el.classList.add('hidden'));
+  document.getElementById('view-'+view).classList.remove('hidden');
+  document.querySelectorAll('.nav-link, .bottom-nav button').forEach(el=>el.classList.toggle('active', el.dataset.view===view));
+  document.getElementById('pageTitle').textContent = TITLES[view][0];
+  document.getElementById('pageSubtitle').textContent = TITLES[view][1];
+  lsSet('mq_vista', view);
+  renderVista(view);
+  if(view==='stock') cargarStock(60000);
+  if(window.innerWidth < 1024){ document.getElementById('sidebar').classList.add('-translate-x-full'); document.getElementById('sidebarOverlay').classList.add('hidden'); }
+  window.scrollTo({top:0});
+}
+function renderVista(v){ if(v==='dashboard') renderDashboard(); if(v==='otm') renderOTM(); if(v==='stock') renderStock(); }
+function refrescarVista(){ if(document.getElementById('modalRoot').innerHTML) { refrescarModal(); } renderVista(vistaActual()); paintCartBar(); }
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebarOverlay').classList.toggle('hidden'); }
+function toast(msg, type='success'){
+  const colors = {success:'bg-emerald-600', error:'bg-red-600', info:'bg-brand-600'};
+  const el = document.createElement('div');
+  el.className = `toast ${colors[type]} text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-pop max-w-sm`;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, type==='error'?6000:3200);
+}
+let modalRefresh = null;
+function abrirModal(html, onRefresh=null, ancho='max-w-2xl'){
+  modalRefresh = onRefresh;
+  document.getElementById('modalRoot').innerHTML = `<div class="modal-backdrop fixed inset-0 z-40 flex items-center justify-center p-4" onmousedown="if(event.target===this) cerrarModal()">
+    <div class="modal-panel bg-white rounded-xl shadow-pop w-full ${ancho} max-h-[90vh] overflow-y-auto" id="modalPanel">${html}</div></div>`;
+  paintCartBar();
+}
+function cerrarModal(){ document.getElementById('modalRoot').innerHTML = ''; modalRefresh = null; renderVista(vistaActual()); paintCartBar(); }
+let refrescoPend = false;
+/* Se difiere: si el re-pintado ocurre dentro de un evento 'change/blur' disparado al reemplazar el HTML, el navegador falla */
+function refrescarModal(){ if(!modalRefresh || refrescoPend) return; refrescoPend = true; setTimeout(()=>{ refrescoPend = false; if(modalRefresh) modalRefresh(); }, 0); }
+function modalHeader(titulo, sub=''){
+  return `<div class="flex items-start gap-3 px-5 py-4 border-b border-ink-100 sticky top-0 bg-white z-10">
+    <div class="min-w-0 flex-1"><h3 class="font-semibold text-ink-900">${titulo}</h3>${sub?`<p class="text-xs text-ink-500 mt-0.5">${sub}</p>`:''}</div>
+    <button onclick="cerrarModal()" class="text-ink-400 hover:text-ink-700 p-1" aria-label="Cerrar"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>`;
+}
+function confirmar(texto, okTxt='Confirmar', peligro=false){
+  return new Promise(res=>{
+    const root = document.getElementById('confirmRoot');
+    window.__conf = v => { root.innerHTML=''; res(v); };
+    root.innerHTML = `<div class="modal-backdrop fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div class="modal-panel bg-white rounded-xl shadow-pop w-full max-w-sm p-5">
+        <p class="text-sm text-ink-700">${texto}</p>
+        <div class="flex justify-end gap-2 mt-5">
+          <button onclick="__conf(false)" class="px-4 py-2 rounded-lg border border-ink-200 text-sm text-ink-600 hover:bg-ink-50">Cancelar</button>
+          <button onclick="__conf(true)" class="px-4 py-2 rounded-lg text-sm font-medium text-white ${peligro?'bg-red-600 hover:bg-red-700':'bg-brand-600 hover:bg-brand-700'}">${okTxt}</button>
+        </div></div></div>`;
+  });
+}
+
+/* Badges */
+function badgeTipo(t){
+  const c = TIPO_COLOR[t] || '#5a6b7d';
+  const lbl = String(t||'—').replace('OTM ','');
+  return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium" style="background:${c}14;color:${c}"><span class="w-1.5 h-1.5 rounded-full" style="background:${c}"></span>${esc(lbl)}</span>`;
+}
+function badgeEstadoOrden(o){
+  return esAsignable(o)
+    ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-brand-50 text-brand-700 ring-1 ring-brand-200">${esc(o.estado)}</span>`
+    : `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-ink-100 text-ink-500 ring-1 ring-ink-200" title="No acepta materiales">${esc(o.estado||'—')}</span>`;
+}
+function badgeRes(e){ return `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium ring-1 ${ESTADO_RES_CLS[e]||ESTADO_RES_CLS.Anulada}">${esc(e)}</span>`; }
+function kpi(label, valor, sub='', color='#0a6ed1', icon=''){
+  return `<div class="bg-white rounded-xl shadow-card border border-ink-100 p-4 flex gap-3 min-w-0">
+    <div class="kpi-icon" style="background:${color}14;color:${color}">${icon||'<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13h4v8H3zM10 8h4v13h-4zM17 3h4v18h-4z"/></svg>'}</div>
+    <div class="min-w-0"><p class="text-[11px] font-medium text-ink-500 uppercase tracking-wide">${label}</p>
+    <p class="text-lg sm:text-xl font-bold text-ink-900 tabular leading-tight mt-0.5 truncate">${valor}</p>${sub?`<p class="text-[11px] text-ink-400 mt-0.5 truncate">${sub}</p>`:''}</div></div>`;
+}
+const IC = {
+  money:'<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>',
+  wrench:'<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63"/></svg>',
+  box:'<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-8.25-4.5L3.75 7.5m16.5 0l-8.25 4.5m8.25-4.5v9L12 21m0-9L3.75 7.5m8.25 4.5V21M3.75 7.5v9L12 21"/></svg>',
+  list:'<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>',
+  clock:'<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+  shield:'<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>',
+  plus:'<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>',
+  trash:'<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>',
+  lock:'<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>',
+};
+function iconWhatsapp(){
+  return `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2 22l5.29-1.39a9.9 9.9 0 004.75 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0012.04 2zm0 18.13h-.01a8.2 8.2 0 01-4.18-1.14l-.3-.18-3.14.82.84-3.06-.2-.31a8.2 8.2 0 01-1.26-4.35c0-4.54 3.7-8.24 8.26-8.24 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 012.42 5.83c0 4.55-3.7 8.24-8.26 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.24-.64.8-.78.97-.14.17-.29.19-.53.06-.25-.12-1.04-.38-1.99-1.22-.73-.66-1.23-1.46-1.37-1.71-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.24-.42.08-.17.04-.31-.02-.44-.06-.12-.56-1.36-.77-1.86-.2-.48-.4-.42-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.08 0 1.23.9 2.42 1.02 2.58.12.17 1.77 2.7 4.29 3.79.6.26 1.06.41 1.43.53.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.1-.23-.16-.48-.28z"/></svg>`;
+}
+function vacio(txt){ return `<div class="text-center text-sm text-ink-400 py-10">${txt}</div>`; }
+function cargando(txt='Cargando…'){ return `<div class="flex items-center justify-center gap-2 text-sm text-ink-400 py-16"><svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity=".25"/><path d="M22 12a10 10 0 00-10-10" stroke="currentColor" stroke-width="3"/></svg>${txt}</div>`; }
+const selCls = 'w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700';
+function opciones(arr, sel, todos='Todos'){ return `<option value="">${todos}</option>` + arr.map(v=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(v)}</option>`).join(''); }
+const unicos = arr => [...new Set(arr.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b)));
+
+/* =========================================================
+   AUTOCOMPLETADO GENÉRICO
+   ========================================================= */
+const AC = {};
+function acHTML(id, placeholder, valorInicial=''){
+  return `<div class="relative"><input id="${id}" autocomplete="off" value="${esc(valorInicial)}" placeholder="${placeholder}" class="${selCls}"
+    oninput="acFiltrar('${id}')" onfocus="acFiltrar('${id}')" onkeydown="acTecla(event,'${id}')" onblur="setTimeout(()=>acCerrar('${id}'),180)">
+    <div id="${id}_list" class="ac-list hidden"></div></div>`;
+}
+function acFiltrar(id){
+  const cfg = AC[id]; if(!cfg) return;
+  const q = document.getElementById(id).value;
+  const toks = tokens(q);
+  const items = cfg.items();
+  const res = [];
+  for(const it of items){ if(!toks.length || coincide(it.q, toks)){ res.push(it); if(res.length>=40) break; } }
+  const list = document.getElementById(id+'_list');
+  cfg.sel = 0; cfg.res = res;
+  list.innerHTML = res.length ? res.map((it,i)=>`<div class="ac-item ${i===0?'sel':''}" onmousedown="acElegir('${id}',${i})">${it.html}</div>`).join('')
+    : `<div class="px-3 py-3 text-xs text-ink-400">${cfg.vacio || 'Sin coincidencias'}</div>`;
+  list.classList.remove('hidden');
+}
+function acTecla(e, id){
+  const cfg = AC[id]; if(!cfg || !cfg.res) return;
+  const list = document.getElementById(id+'_list');
+  if(e.key==='ArrowDown' || e.key==='ArrowUp'){
+    e.preventDefault(); cfg.sel = Math.max(0, Math.min(cfg.res.length-1, cfg.sel + (e.key==='ArrowDown'?1:-1)));
+    [...list.children].forEach((c,i)=>c.classList.toggle('sel', i===cfg.sel));
+    const s = list.children[cfg.sel]; if(s) s.scrollIntoView({block:'nearest'});
+  } else if(e.key==='Enter'){ e.preventDefault(); if(cfg.res.length) acElegir(id, cfg.sel); }
+  else if(e.key==='Escape'){ acCerrar(id); }
+}
+function acElegir(id, i){ const cfg = AC[id]; const it = cfg.res[i]; if(!it) return; acCerrar(id); cfg.onPick(it.value); }
+function acCerrar(id){ const l = document.getElementById(id+'_list'); if(l) l.classList.add('hidden'); }
+
+function itemsOrdenesLib(){
+  return ORDENES.filter(esAsignable).map(o=>({value:o.orden, q:o._q,
+    html:`<div class="flex items-center gap-2"><b class="text-ink-900">${esc(o.orden)}</b>${badgeTipo(o.tipo)}</div><div class="text-[11px] text-ink-500 truncate">${esc(o.texto)} · ${esc(o.denom)} · ${esc(o.ubic)}</div>`}));
+}
+function itemsMateriales(){
+  return STOCK.filter(m=> disponible(m.codigo) > 0).map(m=>({value:m.codigo, q:m._q,
+    html:`<div class="flex justify-between gap-2"><span class="font-medium text-ink-900 truncate">${esc(m.desc)}</span><span class="text-ink-500 tabular whitespace-nowrap">${num(disponible(m.codigo))} ${esc(m.um)}</span></div><div class="text-[11px] text-ink-400">${esc(m.codigo)} · ${money(m.cu)} / ${esc(m.um)}</div>`}));
+}
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+let DF = lsGet('mq_dash_f') || {rango:'todo', desde:'', hasta:'', tipo:'', ubic:'', estado:''};
+const CHARTS = {};
+function rangoFechas(){
+  const hoy = hoyLima();
+  if(DF.rango==='hoy') return [hoy, hoy];
+  if(DF.rango==='semana') return [lunesDeISO(hoy), hoy];
+  if(DF.rango==='mes') return [hoy.slice(0,8)+'01', hoy];
+  if(DF.rango==='30d') return [addDaysISO(hoy,-29), hoy];
+  if(DF.rango==='custom') return [DF.desde||'0000-01-01', DF.hasta||'9999-12-31'];
+  return ['0000-01-01','9999-12-31'];
+}
+function reservasFiltradas(){
+  const [d, h] = rangoFechas();
+  return RESERVAS.filter(r=>{
+    const f = r.fecha ? isoDate(new Date(r.fecha)) : '';
+    if(f < d || f > h) return false;
+    if(DF.tipo && r.tipo !== DF.tipo) return false;
+    if(DF.ubic && r.ubic !== DF.ubic) return false;
+    if(DF.estado){ if(r.estado !== DF.estado) return false; }
+    else if(!activa(r)) return false;
+    return true;
+  });
+}
+function setDF(k, v){ DF[k] = v; if(k==='rango' && v!=='custom'){ DF.desde=''; DF.hasta=''; } lsSet('mq_dash_f', DF); renderDashboard(); }
+function agrupar(rows, keyFn){ const m = {}; rows.forEach(r=>{ const k = keyFn(r) || '—'; const g = m[k] = m[k] || {k, gasto:0, cant:0, lineas:0, ordenes:new Set()}; g.gasto += r.total; g.cant += r.cantidad; g.lineas++; g.ordenes.add(r.orden); }); return Object.values(m).sort((a,b)=>b.gasto-a.gasto); }
+
+function renderDashboard(){
+  const root = document.getElementById('view-dashboard');
+  if(!CORE_OK && !ORDENES.length){ root.innerHTML = cargando('Cargando datos del Sheet…'); return; }
+  const rows = reservasFiltradas();
+  const ordenesLib = ORDENES.filter(esAsignable);
+  const gasto = rows.reduce((s,r)=>s+r.total, 0);
+  const ordCon = new Set(rows.map(r=>r.orden));
+  const reservasIds = new Set(rows.map(r=>r.reserva));
+  const pendiente = rows.filter(r=>r.estado==='Pendiente').reduce((s,r)=>s+r.total,0);
+  const atendida = rows.filter(r=>r.estado==='Atendida').reduce((s,r)=>s+r.total,0);
+  const porTipo = agrupar(rows, r=>r.tipo);
+  const prev = (porTipo.find(g=>g.k==='OTM PREVENTIVA')||{gasto:0}).gasto;
+  const corr = (porTipo.find(g=>g.k==='OTM CORRECTIVA')||{gasto:0}).gasto;
+  const valorInv = STOCK.reduce((s,m)=>s+m.valor,0);
+  const tipos = unicos([...ORDENES.map(o=>o.tipo), ...RESERVAS.map(r=>r.tipo)]);
+  const ubics = unicos([...ORDENES.map(o=>o.ubic), ...RESERVAS.map(r=>r.ubic)]);
+  const rangoBtn = (k, t) => `<button onclick="setDF('rango','${k}')" class="px-3 py-1.5 rounded-lg text-xs font-medium ${DF.rango===k?'bg-ink-900 text-white':'bg-white border border-ink-200 text-ink-600 hover:bg-ink-50'}">${t}</button>`;
+
+  root.innerHTML = `
+  <div class="bg-white rounded-xl shadow-card border border-ink-100 p-3 sm:p-4 mb-4">
+    <div class="flex flex-wrap items-center gap-2">
+      ${rangoBtn('hoy','Hoy')}${rangoBtn('semana','Semana')}${rangoBtn('mes','Mes')}${rangoBtn('30d','30 días')}${rangoBtn('todo','Todo')}${rangoBtn('custom','Rango')}
+      ${DF.rango==='custom'?`<input type="date" value="${DF.desde}" onchange="setDF('desde',this.value)" class="rounded-lg border border-ink-200 px-2 py-1.5 text-xs"><span class="text-ink-400 text-xs">a</span><input type="date" value="${DF.hasta}" onchange="setDF('hasta',this.value)" class="rounded-lg border border-ink-200 px-2 py-1.5 text-xs">`:''}
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
+      <select onchange="setDF('tipo',this.value)" class="${selCls}">${opciones(tipos, DF.tipo, 'Todos los tipos de OTM')}</select>
+      <select onchange="setDF('ubic',this.value)" class="${selCls}">${opciones(ubics, DF.ubic, 'Todas las ubicaciones técnicas')}</select>
+      <select onchange="setDF('estado',this.value)" class="${selCls}">
+        <option value="" ${!DF.estado?'selected':''}>Pendiente + Atendida</option>
+        ${['Pendiente','Atendida','Anulada'].map(e=>`<option ${DF.estado===e?'selected':''}>${e}</option>`).join('')}
+      </select>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+    ${kpi('Gasto en materiales', moneyK(gasto), `${num(rows.length)} líneas · ${num(reservasIds.size)} reservas`, '#0a6ed1', IC.money)}
+    ${kpi('OTM con materiales', num(ordCon.size), `de ${num(ordenesLib.length)} OTM LIB. · cobertura ${pct(ordCon.size, ordenesLib.length)}`, '#059669', IC.wrench)}
+    ${kpi('Costo promedio por OTM', money(ordCon.size ? gasto/ordCon.size : 0), `${num(new Set(rows.map(r=>r.material)).size)} materiales distintos`, '#7c3aed', IC.list)}
+    ${kpi('Preventivo / Correctivo', `${pct(prev, gasto)} / ${pct(corr, gasto)}`, `${moneyK(prev)} · ${moneyK(corr)}`, '#dc2626', IC.shield)}
+    ${kpi('Pendiente de atención', moneyK(pendiente), `${num(rows.filter(r=>r.estado==='Pendiente').length)} líneas por despachar`, '#d97706', IC.clock)}
+    ${kpi('Atendido en almacén', moneyK(atendida), `${pct(atendida, gasto)} del gasto`, '#059669', IC.box)}
+    ${kpi('Valor inventario MB52', moneyK(valorInv), `${num(STOCK.length)} materiales con stock`, '#425063', IC.box)}
+    ${kpi('Gasto / inventario', pct(gasto, valorInv), 'Gasto del periodo vs. valor en almacén', '#0857a8', IC.money)}
+  </div>
+
+  ${rows.length ? `
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+    <div class="bg-white rounded-xl shadow-card border border-ink-100 p-4 lg:col-span-2">
+      <p class="text-sm font-semibold text-ink-900">Gasto diario</p><p class="text-xs text-ink-400 mb-3">Materiales asignados por fecha de registro</p>
+      <div class="chart-box"><canvas id="chDia"></canvas></div></div>
+    <div class="bg-white rounded-xl shadow-card border border-ink-100 p-4">
+      <p class="text-sm font-semibold text-ink-900">Gasto por tipo de OTM</p><p class="text-xs text-ink-400 mb-3">Preventiva vs correctiva</p>
+      <div class="chart-box"><canvas id="chTipo"></canvas></div></div>
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+    <div class="bg-white rounded-xl shadow-card border border-ink-100 p-4">
+      <p class="text-sm font-semibold text-ink-900">Gasto por ubicación técnica</p><p class="text-xs text-ink-400 mb-3">Familia de equipos</p>
+      <div class="chart-box"><canvas id="chUbic"></canvas></div></div>
+    <div class="bg-white rounded-xl shadow-card border border-ink-100 p-4">
+      <p class="text-sm font-semibold text-ink-900">Top 10 equipos por gasto</p><p class="text-xs text-ink-400 mb-3">Equipo / objeto técnico</p>
+      <div class="chart-box"><canvas id="chEquipo"></canvas></div></div>
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+    <div class="bg-white rounded-xl shadow-card border border-ink-100 p-4 overflow-hidden">
+      <p class="text-sm font-semibold text-ink-900 mb-3">Top 10 materiales por gasto</p>
+      ${tablaTop(agrupar(rows, r=>r.material).slice(0,10), g=>{ const r = rows.find(x=>x.material===g.k); return `<p class="text-xs font-medium text-ink-800 truncate">${esc(r.desc)}</p><p class="text-[11px] text-ink-400">${esc(g.k)} · ${num(g.cant)} ${esc(r.um)} · ${g.ordenes.size} OTM</p>`; }, gasto)}
+    </div>
+    <div class="bg-white rounded-xl shadow-card border border-ink-100 p-4 overflow-hidden">
+      <p class="text-sm font-semibold text-ink-900 mb-3">Top 10 OTM por gasto</p>
+      ${tablaTop(agrupar(rows, r=>r.orden).slice(0,10), g=>{ const r = rows.find(x=>x.orden===g.k); return `<button onclick="verOrden('${jsq(g.k)}')" class="text-left w-full"><p class="text-xs font-medium text-brand-700 hover:underline truncate">${esc(g.k)} · ${esc(r.texto)}</p><p class="text-[11px] text-ink-400 truncate">${esc(r.denom)} · ${g.lineas} líneas</p></button>`; }, gasto)}
+    </div>
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+    <div class="bg-white rounded-xl shadow-card border border-ink-100 p-4">
+      <p class="text-sm font-semibold text-ink-900 mb-3">Gasto por solicitante</p>
+      ${tablaTop(agrupar(rows, r=>r.solicitante).slice(0,8), g=>`<p class="text-xs font-medium text-ink-800 truncate">${esc(g.k)}</p><p class="text-[11px] text-ink-400">${g.ordenes.size} OTM · ${g.lineas} líneas</p>`, gasto)}
+    </div>
+    <div class="bg-white rounded-xl shadow-card border border-ink-100 p-4 lg:col-span-2 overflow-hidden">
+      <div class="flex items-center gap-2 mb-3"><p class="text-sm font-semibold text-ink-900">Últimas reservas</p>
+        <button onclick="exportarCSV()" class="ml-auto text-xs font-medium text-brand-700 hover:underline">Exportar CSV (${num(rows.length)} líneas)</button></div>
+      ${tablaReservas(rows, 12)}
+    </div>
+  </div>` : `<div class="bg-white rounded-xl shadow-card border border-ink-100 p-4">${vacio(RESERVAS.length ? 'No hay reservas con los filtros elegidos.' : 'Aún no se han asignado materiales a ninguna OTM.<br>Empieza desde <b>OTM creadas</b> o <b>Stock</b>.')}</div>`}
+  `;
+  if(rows.length) pintarGraficos(rows);
+}
+function tablaTop(grupos, labelFn, total){
+  if(!grupos.length) return vacio('Sin datos');
+  const max = grupos[0].gasto || 1;
+  return `<div class="space-y-2.5">${grupos.map(g=>`<div>
+    <div class="flex items-center gap-3"><div class="min-w-0 flex-1">${labelFn(g)}</div>
+    <div class="text-right shrink-0"><p class="text-xs font-semibold text-ink-900 tabular">${money(g.gasto)}</p><p class="text-[10px] text-ink-400">${pct(g.gasto,total)}</p></div></div>
+    <div class="h-1.5 bg-ink-100 rounded-full mt-1"><div class="h-1.5 rounded-full bg-brand-500" style="width:${Math.max(2,g.gasto*100/max)}%"></div></div></div>`).join('')}</div>`;
+}
+function gruposReserva(rows){
+  const m = {};
+  rows.forEach(r=>{ const g = m[r.reserva] = m[r.reserva] || {reserva:r.reserva, fecha:r.fecha, orden:r.orden, denom:r.denom, texto:r.texto, solicitante:r.solicitante, lineas:[], total:0}; g.lineas.push(r); g.total += r.total; });
+  return Object.values(m).sort((a,b)=> String(b.fecha).localeCompare(String(a.fecha)));
+}
+function estadoGrupo(g){ const s = new Set(g.lineas.map(l=>l.estado)); return s.size===1 ? [...s][0] : 'Pendiente'; }
+function tablaReservas(rows, limite){
+  const gs = gruposReserva(rows).slice(0, limite);
+  if(!gs.length) return vacio('Sin reservas');
+  return `<div class="overflow-x-auto -mx-4"><table class="w-full text-xs min-w-[560px]">
+    <thead><tr class="text-left text-ink-400 border-b border-ink-100"><th class="px-4 py-2 font-medium">Reserva</th><th class="px-2 py-2 font-medium">OTM / equipo</th><th class="px-2 py-2 font-medium">Solicitante</th><th class="px-2 py-2 font-medium text-right">Total</th><th class="px-2 py-2 font-medium">Estado</th><th class="px-4 py-2"></th></tr></thead>
+    <tbody>${gs.map(g=>`<tr class="border-b border-ink-50 hover:bg-ink-50/60">
+      <td class="px-4 py-2"><p class="font-semibold text-ink-900">${esc(g.reserva)}</p><p class="text-[11px] text-ink-400">${fmtDateTime(g.fecha)}</p></td>
+      <td class="px-2 py-2 max-w-[220px]"><button onclick="verOrden('${jsq(g.orden)}')" class="text-brand-700 font-medium hover:underline">${esc(g.orden)}</button><p class="text-[11px] text-ink-500 truncate">${esc(g.denom)}</p></td>
+      <td class="px-2 py-2 text-ink-600">${esc(g.solicitante)}</td>
+      <td class="px-2 py-2 text-right font-semibold tabular">${money(g.total)}<p class="text-[10px] font-normal text-ink-400">${g.lineas.length} mat.</p></td>
+      <td class="px-2 py-2">${badgeRes(estadoGrupo(g))}</td>
+      <td class="px-4 py-2 text-right"><button onclick="reenviarReserva('${jsq(g.reserva)}')" title="Reenviar por WhatsApp" class="p-1.5 rounded-md hover:bg-emerald-50 text-emerald-600">${iconWhatsapp()}</button></td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+function pintarGraficos(rows){
+  if(typeof Chart === 'undefined') return;
+  Object.values(CHARTS).forEach(c=>c.destroy());
+  Chart.defaults.font.family = 'Inter'; Chart.defaults.font.size = 11; Chart.defaults.color = '#5a6b7d';
+  const tip = {callbacks:{label: c => ' '+money(c.parsed.y ?? c.parsed.x ?? c.parsed)}};
+  const grid = {color:'#eef1f5'};
+  // Diario
+  const dias = {}; rows.forEach(r=>{ const d = isoDate(new Date(r.fecha)); dias[d] = (dias[d]||0) + r.total; });
+  const keys = Object.keys(dias).sort();
+  const serie = []; if(keys.length){ for(let d = keys[0]; d <= keys[keys.length-1]; d = addDaysISO(d,1)){ serie.push([d, dias[d]||0]); if(serie.length>370) break; } }
+  CHARTS.dia = new Chart(document.getElementById('chDia'), {type:'bar',
+    data:{labels:serie.map(s=>ddmm(s[0])), datasets:[{data:serie.map(s=>Math.round(s[1]*100)/100), backgroundColor:'#1f83f7', borderRadius:4, maxBarThickness:28}]},
+    options:{maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:tip}, scales:{x:{grid:{display:false}}, y:{grid, ticks:{callback:v=>moneyK(v)}}}}});
+  // Tipo
+  const pt = agrupar(rows, r=>r.tipo);
+  CHARTS.tipo = new Chart(document.getElementById('chTipo'), {type:'doughnut',
+    data:{labels:pt.map(g=>String(g.k).replace('OTM ','')), datasets:[{data:pt.map(g=>Math.round(g.gasto*100)/100), backgroundColor:pt.map(g=>TIPO_COLOR[g.k]||'#7c8b9b'), borderWidth:2, borderColor:'#fff'}]},
+    options:{maintainAspectRatio:false, cutout:'62%', plugins:{legend:{position:'bottom', labels:{boxWidth:10, usePointStyle:true}}, tooltip:{callbacks:{label:c=>` ${c.label}: ${money(c.parsed)}`}}}}});
+  const hbar = (id, grupos, color) => new Chart(document.getElementById(id), {type:'bar',
+    data:{labels:grupos.map(g=>g.label||g.k), datasets:[{data:grupos.map(g=>Math.round(g.gasto*100)/100), backgroundColor:color, borderRadius:4, maxBarThickness:22}]},
+    options:{indexAxis:'y', maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>' '+money(c.parsed.x)}}},
+      scales:{x:{grid, ticks:{callback:v=>moneyK(v)}}, y:{grid:{display:false}, ticks:{callback:function(v){ const l = this.getLabelForValue(v); return l.length>26 ? l.slice(0,25)+'…' : l; }}}}}});
+  CHARTS.ubic = hbar('chUbic', agrupar(rows, r=>r.ubic).slice(0,10), '#0857a8');
+  CHARTS.equipo = hbar('chEquipo', agrupar(rows, r=>r.equipo).slice(0,10).map(g=>({...g, label: (rows.find(r=>r.equipo===g.k)||{}).denom || g.k})), '#059669');
+}
+function exportarCSV(){
+  const rows = reservasFiltradas();
+  const cols = [['ID_Linea','id'],['ID_Reserva','reserva'],['Fecha','fecha'],['Orden','orden'],['Texto_Orden','texto'],['Clase','clase'],['Tipo_OTM','tipo'],['Equipo','equipo'],['Denominacion','denom'],['Ubicacion','ubic'],['Material','material'],['Descripcion','desc'],['UM','um'],['Cantidad','cantidad'],['Costo_Unit','cu'],['Costo_Total','total'],['Solicitante','solicitante'],['Estado','estado'],['Comentario','comentario']];
+  const q = v => { const s = String(v ?? ''); return /[";\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; };
+  const lines = [cols.map(c=>c[0]).join(';')].concat(rows.map(r=>cols.map(([,k])=> k==='fecha' ? fmtDateTime(r.fecha) : (typeof r[k]==='number' ? String(r[k]).replace('.',',') : q(r[k]))).join(';')));
+  const blob = new Blob(['\ufeff'+lines.join('\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `reservas_maquinaria_${hoyLima()}.csv`; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+
+/* =========================================================
+   OTM CREADAS
+   ========================================================= */
+let OF = lsGet('mq_otm_f') || {q:'', tipo:'', ubic:'', estado:'LIB', mat:''};
+function setOF(k, v){ OF[k] = v; lsSet('mq_otm_f', OF); pintarListaOTM(); }
+function renderOTM(){
+  const root = document.getElementById('view-otm');
+  if(!CORE_OK && !ORDENES.length){ root.innerHTML = cargando('Cargando órdenes…'); return; }
+  const lib = ORDENES.filter(esAsignable);
+  const conMat = ORDENES.filter(o=>POR_ORDEN[o.orden]);
+  const gasto = Object.values(POR_ORDEN).reduce((s,p)=>s+p.gasto,0);
+  root.innerHTML = `
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+    ${kpi('OTM en IW38', num(ORDENES.length), `${num(ORDENES.filter(o=>o.tipo==='OTM PREVENTIVA').length)} preventivas · ${num(ORDENES.filter(o=>o.tipo==='OTM CORRECTIVA').length)} correctivas`, '#0a6ed1', IC.list)}
+    ${kpi('Asignables (LIB.)', num(lib.length), `${pct(lib.length, ORDENES.length)} del total`, '#0857a8', IC.shield)}
+    ${kpi('Con materiales', num(conMat.length), `${num(lib.filter(o=>!POR_ORDEN[o.orden]).length)} LIB. sin materiales`, '#059669', IC.wrench)}
+    ${kpi('Gasto asignado', moneyK(gasto), 'Pendiente + Atendida', '#7c3aed', IC.money)}
+  </div>
+  <div class="bg-white rounded-xl shadow-card border border-ink-100 p-3 sm:p-4 mb-3">
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-2">
+      <div class="col-span-2 lg:col-span-2"><input id="otmQ" value="${esc(OF.q)}" oninput="setOF('q',this.value)" placeholder="Buscar orden, equipo, texto…" class="${selCls}"></div>
+      <select onchange="setOF('tipo',this.value)" class="${selCls}">${opciones(unicos(ORDENES.map(o=>o.tipo)), OF.tipo, 'Tipo: todos')}</select>
+      <select onchange="setOF('ubic',this.value)" class="${selCls}">${opciones(unicos(ORDENES.map(o=>o.ubic)), OF.ubic, 'Ubicación: todas')}</select>
+      <select onchange="setOF('estado',this.value)" class="${selCls}">
+        <option value="LIB" ${OF.estado==='LIB'?'selected':''}>Solo LIB.</option><option value="" ${!OF.estado?'selected':''}>Todos los estados</option><option value="NOLIB" ${OF.estado==='NOLIB'?'selected':''}>No asignables</option></select>
+      <select onchange="setOF('mat',this.value)" class="${selCls}">
+        <option value="" ${!OF.mat?'selected':''}>Con y sin materiales</option><option value="con" ${OF.mat==='con'?'selected':''}>Con materiales</option><option value="sin" ${OF.mat==='sin'?'selected':''}>Sin materiales</option></select>
+    </div>
+  </div>
+  <p id="otmCount" class="text-xs text-ink-500 mb-2 px-1"></p>
+  <div id="otmList" class="space-y-2"></div>`;
+  pintarListaOTM();
+}
+let otmLimite = 60;
+function pintarListaOTM(limite){
+  if(limite) otmLimite = limite; else otmLimite = 60;
+  const toks = tokens(OF.q);
+  const lista = ORDENES.filter(o=>{
+    if(OF.tipo && o.tipo!==OF.tipo) return false;
+    if(OF.ubic && o.ubic!==OF.ubic) return false;
+    if(OF.estado==='LIB' && !esAsignable(o)) return false;
+    if(OF.estado==='NOLIB' && esAsignable(o)) return false;
+    if(OF.mat==='con' && !POR_ORDEN[o.orden]) return false;
+    if(OF.mat==='sin' && POR_ORDEN[o.orden]) return false;
+    return !toks.length || coincide(o._q, toks);
+  });
+  const el = document.getElementById('otmList'); if(!el) return;
+  document.getElementById('otmCount').textContent = `${num(lista.length)} orden(es)`;
+  el.innerHTML = lista.length ? lista.slice(0, otmLimite).map(cardOTM).join('') + (lista.length > otmLimite ? `<button onclick="pintarListaOTM(${otmLimite+60})" class="w-full py-2.5 rounded-lg border border-ink-200 bg-white text-sm text-ink-600 hover:bg-ink-50">Ver más (${num(lista.length-otmLimite)} restantes)</button>` : '') : `<div class="bg-white rounded-xl border border-ink-100">${vacio('No hay órdenes con esos filtros')}</div>`;
+}
+function cardOTM(o){
+  const p = POR_ORDEN[o.orden];
+  const enCurso = CART.orden===o.orden && CART.items.length;
+  return `<div class="bg-white rounded-xl shadow-card border ${enCurso?'border-brand-300 ring-2 ring-brand-100':'border-ink-100'} p-3 sm:p-4">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+      <div class="min-w-0 flex-1 cursor-pointer" onclick="verOrden('${jsq(o.orden)}')">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="font-bold text-ink-900 tabular">${esc(o.orden)}</span>${badgeTipo(o.tipo)}${badgeEstadoOrden(o)}
+          <span class="text-[11px] text-ink-400">${esc(o.clase)} · inicio ${fmtDate(o.fecha)}</span>
+        </div>
+        <p class="text-sm font-medium text-ink-800 mt-1">${esc(o.texto)}</p>
+        <p class="text-xs text-ink-500 truncate">${esc(o.equipo)} · ${esc(o.denom)} · ${esc(o.ubic)}</p>
+      </div>
+      <div class="flex items-center gap-3 sm:gap-4 shrink-0">
+        <div class="text-right min-w-[92px]">
+          <p class="text-sm font-bold tabular ${p?'text-ink-900':'text-ink-300'}">${money(p?p.gasto:0)}</p>
+          <p class="text-[11px] text-ink-400">${p?`${p.lineas} material(es)`:'sin materiales'}</p>
+        </div>
+        ${esAsignable(o)
+          ? `<button onclick="asignarAOrden('${jsq(o.orden)}')" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium">${IC.plus} Asignar</button>`
+          : `<span title="Solo se asignan materiales a órdenes ${CONFIG.ESTADO_ASIGNABLE}" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-ink-100 text-ink-400 text-sm font-medium cursor-not-allowed">${IC.lock} Bloqueada</span>`}
+      </div>
+    </div></div>`;
+}
+function verOrden(orden){
+  const pintar = () => {
+    const o = ORD_MAP[orden];
+    const lineas = RESERVAS.filter(r=>r.orden===orden);
+    const base = o || lineas[0] || {orden};
+    const gs = gruposReserva(lineas);
+    const total = lineas.filter(activa).reduce((s,r)=>s+r.total,0);
+    abrirModal(`${modalHeader(`OTM ${esc(orden)}`, esc(base.texto||''))}
+      <div class="p-5">
+        <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs mb-4">
+          <div><p class="text-ink-400">Equipo</p><p class="font-medium text-ink-800">${esc(base.equipo||'—')} · ${esc(base.denom||'')}</p></div>
+          <div><p class="text-ink-400">Ubicación técnica</p><p class="font-medium text-ink-800">${esc(base.ubic||'—')}</p></div>
+          <div><p class="text-ink-400">Tipo</p><p>${badgeTipo(base.tipo)} <span class="text-ink-500">${esc(base.clase||'')}</span></p></div>
+          <div><p class="text-ink-400">Estado SAP</p><p>${o?badgeEstadoOrden(o):'<span class="text-ink-400">No está en el IW38 actual</span>'} <span class="text-[10px] text-ink-400">${esc(o?o.status:'')}</span></p></div>
+          <div><p class="text-ink-400">Inicio extremo</p><p class="font-medium text-ink-800">${fmtDate(o&&o.fecha)}</p></div>
+          <div><p class="text-ink-400">Gasto asignado</p><p class="font-bold text-ink-900 tabular">${money(total)}</p></div>
+        </div>
+        ${esAsignable(o) ? `<button onclick="asignarAOrden('${jsq(orden)}')" class="w-full mb-4 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium">${IC.plus} Asignar materiales</button>` : `<div class="mb-4 text-xs text-ink-500 bg-ink-50 rounded-lg px-3 py-2 flex items-center gap-2">${IC.lock} Esta orden no está en estado ${CONFIG.ESTADO_ASIGNABLE}: no admite nuevos materiales.</div>`}
+        <p class="text-sm font-semibold text-ink-900 mb-2">Materiales asignados</p>
+        ${gs.length ? gs.map(g=>bloqueReserva(g)).join('') : vacio('Esta OTM aún no tiene materiales asignados')}
+      </div>`, pintar);
+  };
+  pintar();
+}
+function bloqueReserva(g){
+  const pend = g.lineas.filter(l=>l.estado==='Pendiente').map(l=>l.id);
+  const noAnul = g.lineas.filter(l=>l.estado!=='Anulada').map(l=>l.id);
+  return `<div class="border border-ink-100 rounded-lg mb-3 overflow-hidden">
+    <div class="flex flex-wrap items-center gap-2 px-3 py-2 bg-ink-50">
+      <b class="text-xs text-ink-900">${esc(g.reserva)}</b><span class="text-[11px] text-ink-500">${fmtDateTime(g.fecha)} · ${esc(g.solicitante)}</span>
+      <span class="ml-auto text-xs font-bold tabular">${money(g.lineas.filter(activa).reduce((s,l)=>s+l.total,0))}</span>
+    </div>
+    <div class="divide-y divide-ink-50">${g.lineas.map(l=>`<div class="flex items-center gap-2 px-3 py-2 text-xs ${l.estado==='Anulada'?'opacity-50 line-through':''}">
+      <div class="min-w-0 flex-1"><p class="font-medium text-ink-800 truncate">${esc(l.desc)}</p><p class="text-[11px] text-ink-400">${esc(l.material)} · ${num(l.cantidad)} ${esc(l.um)} × ${money(l.cu)}</p></div>
+      <span class="tabular font-semibold">${money(l.total)}</span>${badgeRes(l.estado)}</div>`).join('')}</div>
+    ${g.lineas[0].comentario?`<p class="px-3 py-2 text-[11px] text-ink-500 border-t border-ink-50">📝 ${esc(g.lineas[0].comentario)}</p>`:''}
+    <div class="flex flex-wrap gap-2 px-3 py-2 border-t border-ink-100">
+      <button onclick="reenviarReserva('${jsq(g.reserva)}')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-emerald-700 hover:bg-emerald-50">${iconWhatsapp()} WhatsApp</button>
+      ${pend.length?`<button onclick="cambiarEstado(${JSON.stringify(pend).replace(/"/g,'&quot;')}, 'Atendida')" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-brand-700 hover:bg-brand-50">Marcar atendida</button>`:''}
+      ${noAnul.length?`<button onclick="cambiarEstado(${JSON.stringify(noAnul).replace(/"/g,'&quot;')}, 'Anulada')" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-red-600 hover:bg-red-50">Anular</button>`:''}
+    </div></div>`;
+}
+async function cambiarEstado(ids, estado){
+  if(estado==='Anulada' && !(await confirmar(`¿Anular ${ids.length} línea(s)? El stock comprometido se libera y no se puede revertir.`, 'Anular', true))) return;
+  try{
+    const usuario = SOLICITANTE || '';
+    const d = await apiPost('cambiar_estado', {ids, estado, usuario});
+    (d.actualizadas||[]).forEach(u=>{ const i = RESERVAS.findIndex(r=>r.id===u.id); if(i>=0) RESERVAS[i] = u; });
+    recalcular();
+    toast(`${ids.length} línea(s) → ${estado}`);
+    refrescarVista();
+  }catch(err){ toast('No se pudo cambiar el estado: '+err.message, 'error'); }
+}
+
+/* =========================================================
+   STOCK
+   ========================================================= */
+let SF = lsGet('mq_stock_f') || {q:'', fam:'', um:'', orden:'valor', solo:'disp'};
+let stockPag = 1;
+function setSF(k, v){ SF[k] = v; stockPag = 1; lsSet('mq_stock_f', SF); pintarTablaStock(); }
+function renderStock(){
+  const root = document.getElementById('view-stock');
+  if(!STOCK_OK){ root.innerHTML = cargando('Cargando stock MB52… (la primera vez puede tardar unos segundos)'); return; }
+  const valorInv = STOCK.reduce((s,m)=>s+m.valor,0);
+  const compMats = Object.keys(COMPROMETIDO).filter(c=>COMPROMETIDO[c]>0);
+  const compValor = compMats.reduce((s,c)=> s + (COMPROMETIDO[c] * ((STOCK_MAP[c]||{}).cu||0)), 0);
+  const agotados = STOCK.filter(m=> disponible(m.codigo) <= 0).length;
+  root.innerHTML = `
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+    ${kpi('Materiales con stock', num(STOCK.length), `${num(unicos(STOCK.map(m=>m.fam)).length)} familias`, '#0a6ed1', IC.box)}
+    ${kpi('Valor inventario', moneyK(valorInv), 'Según MB52', '#425063', IC.money)}
+    ${kpi('Comprometido', moneyK(compValor), `${num(compMats.length)} materiales en reservas pendientes`, '#d97706', IC.clock)}
+    ${kpi('Sin disponible', num(agotados), 'Stock reservado al 100%', '#dc2626', IC.lock)}
+  </div>
+  <div class="bg-white rounded-xl shadow-card border border-ink-100 p-3 sm:p-4 mb-3">
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-2">
+      <div class="col-span-2"><input id="stkQ" value="${esc(SF.q)}" oninput="setSF('q',this.value)" placeholder="Buscar código o descripción…" class="${selCls}"></div>
+      <select onchange="setSF('fam',this.value)" class="${selCls}">${opciones(unicos(STOCK.map(m=>m.fam)), SF.fam, 'Familia: todas')}</select>
+      <select onchange="setSF('um',this.value)" class="${selCls}">${opciones(unicos(STOCK.map(m=>m.um)), SF.um, 'UM: todas')}</select>
+      <select onchange="setSF('orden',this.value)" class="${selCls}">
+        ${[['valor','Mayor valor'],['stock','Mayor stock'],['comp','Más comprometido'],['codigo','Código A-Z'],['desc','Descripción A-Z']].map(([v,t])=>`<option value="${v}" ${SF.orden===v?'selected':''}>${t}</option>`).join('')}</select>
+      <select onchange="setSF('solo',this.value)" class="${selCls}">
+        <option value="disp" ${SF.solo==='disp'?'selected':''}>Con disponible</option><option value="" ${!SF.solo?'selected':''}>Todos</option><option value="comp" ${SF.solo==='comp'?'selected':''}>Con reservas pendientes</option></select>
+    </div>
+    <p id="stockInfo" class="text-[11px] text-ink-400 mt-2">${horaStock()}</p>
+  </div>
+  <div id="stockTabla"></div>`;
+  pintarTablaStock();
+}
+function pintarTablaStock(){
+  const el = document.getElementById('stockTabla'); if(!el) return;
+  const toks = tokens(SF.q);
+  let lista = STOCK.filter(m=>{
+    if(SF.fam && m.fam!==SF.fam) return false;
+    if(SF.um && m.um!==SF.um) return false;
+    if(SF.solo==='disp' && disponible(m.codigo) <= 0) return false;
+    if(SF.solo==='comp' && !(COMPROMETIDO[m.codigo]>0)) return false;
+    return !toks.length || coincide(m._q, toks);
+  });
+  const cmp = {valor:(a,b)=>b.valor-a.valor, stock:(a,b)=>b.stock-a.stock, comp:(a,b)=>(COMPROMETIDO[b.codigo]||0)*b.cu-(COMPROMETIDO[a.codigo]||0)*a.cu, codigo:(a,b)=>a.codigo.localeCompare(b.codigo), desc:(a,b)=>a.desc.localeCompare(b.desc)}[SF.orden] || ((a,b)=>b.valor-a.valor);
+  lista.sort(cmp);
+  const pags = Math.max(1, Math.ceil(lista.length / CONFIG.PAGE_SIZE));
+  stockPag = Math.min(stockPag, pags);
+  const pag = lista.slice((stockPag-1)*CONFIG.PAGE_SIZE, stockPag*CONFIG.PAGE_SIZE);
+  const fila = m => {
+    const comp = COMPROMETIDO[m.codigo]||0, disp = disponible(m.codigo), car = enCarrito(m.codigo);
+    return {comp, disp, car};
+  };
+  const btn = m => { const {disp, car} = fila(m); return disp > 0
+    ? `<button onclick="asignarMaterial('${jsq(m.codigo)}')" class="flex items-center gap-1 px-3 py-1.5 rounded-lg ${car?'bg-brand-50 text-brand-700 ring-1 ring-brand-200':'bg-brand-600 text-white hover:bg-brand-700'} text-xs font-medium whitespace-nowrap">${car?`✓ ${num(car)} en reserva`:`${IC.plus} Asignar`}</button>`
+    : `<span class="text-[11px] text-ink-400">Sin disponible</span>`; };
+  el.innerHTML = !lista.length ? `<div class="bg-white rounded-xl border border-ink-100">${vacio('No hay materiales con esos filtros')}</div>` : `
+  <div class="hidden md:block bg-white rounded-xl shadow-card border border-ink-100 overflow-hidden">
+    <table class="w-full text-xs">
+      <thead class="bg-ink-50 text-ink-500"><tr class="text-left">
+        <th class="px-4 py-2.5 font-medium">Material</th><th class="px-2 py-2.5 font-medium">UM</th>
+        <th class="px-2 py-2.5 font-medium text-right">Stock SAP</th><th class="px-2 py-2.5 font-medium text-right">Reservado</th><th class="px-2 py-2.5 font-medium text-right">Disponible</th>
+        <th class="px-2 py-2.5 font-medium text-right">Costo unit.</th><th class="px-2 py-2.5 font-medium text-right">Valor</th><th class="px-4 py-2.5"></th></tr></thead>
+      <tbody>${pag.map(m=>{ const {comp, disp} = fila(m); return `<tr class="border-t border-ink-50 hover:bg-ink-50/60">
+        <td class="px-4 py-2 max-w-[380px]"><p class="font-medium text-ink-800 truncate">${esc(m.desc)}</p><p class="text-[11px] text-ink-400">${esc(m.codigo)}</p></td>
+        <td class="px-2 py-2 text-ink-500">${esc(m.um)}</td>
+        <td class="px-2 py-2 text-right tabular">${num(m.stock)}</td>
+        <td class="px-2 py-2 text-right tabular ${comp?'text-amber-600 font-medium':'text-ink-300'}">${comp?num(comp):'—'}</td>
+        <td class="px-2 py-2 text-right tabular font-semibold ${disp>0?'text-ink-900':'text-red-600'}">${num(disp)}</td>
+        <td class="px-2 py-2 text-right tabular text-ink-600">${money(m.cu)}</td>
+        <td class="px-2 py-2 text-right tabular text-ink-600">${money(m.valor)}</td>
+        <td class="px-4 py-2 text-right">${btn(m)}</td></tr>`; }).join('')}</tbody>
+    </table></div>
+  <div class="md:hidden space-y-2">${pag.map(m=>{ const {comp, disp} = fila(m); return `<div class="bg-white rounded-xl shadow-card border border-ink-100 p-3">
+    <p class="text-sm font-medium text-ink-800">${esc(m.desc)}</p><p class="text-[11px] text-ink-400">${esc(m.codigo)} · ${money(m.cu)} / ${esc(m.um)}</p>
+    <div class="flex items-end gap-3 mt-2"><div class="flex-1 grid grid-cols-3 gap-1 text-[11px]">
+      <div><p class="text-ink-400">Stock</p><p class="font-medium tabular">${num(m.stock)}</p></div>
+      <div><p class="text-ink-400">Reservado</p><p class="font-medium tabular ${comp?'text-amber-600':''}">${num(comp)}</p></div>
+      <div><p class="text-ink-400">Disponible</p><p class="font-bold tabular">${num(disp)} ${esc(m.um)}</p></div></div>${btn(m)}</div></div>`; }).join('')}</div>
+  <div class="flex items-center justify-between gap-2 mt-3 text-xs text-ink-500 px-1">
+    <span>${num(lista.length)} materiales · página ${stockPag} de ${pags}</span>
+    <div class="flex gap-2">
+      <button ${stockPag<=1?'disabled':''} onclick="stockPag--;pintarTablaStock();window.scrollTo({top:0})" class="px-3 py-1.5 rounded-lg border border-ink-200 bg-white disabled:opacity-40">Anterior</button>
+      <button ${stockPag>=pags?'disabled':''} onclick="stockPag++;pintarTablaStock();window.scrollTo({top:0})" class="px-3 py-1.5 rounded-lg border border-ink-200 bg-white disabled:opacity-40">Siguiente</button>
+    </div></div>`;
+}
+/** Desde Stock: elegir OTM (solo LIB.) y cantidad */
+function asignarMaterial(codigo){
+  const m = STOCK_MAP[codigo]; if(!m) return;
+  let ordenSel = CART.orden && esAsignable(ORD_MAP[CART.orden]) ? CART.orden : '';
+  const pintar = () => {
+    const disp = disponible(codigo), car = enCarrito(codigo);
+    const o = ORD_MAP[ordenSel];
+    AC.acOrd = {items: itemsOrdenesLib, vacio:`Sin órdenes ${CONFIG.ESTADO_ASIGNABLE} que coincidan`, onPick: v=>{ ordenSel = v; pintar(); setTimeout(()=>{ const c = document.getElementById('amCant'); if(c) c.focus(); }, 50); }};
+    abrirModal(`${modalHeader('Asignar material a una OTM', `${esc(m.codigo)} · ${esc(m.desc)}`)}
+      <div class="p-5 space-y-4">
+        <div class="grid grid-cols-3 gap-2 text-xs bg-ink-50 rounded-lg p-3">
+          <div><p class="text-ink-400">Disponible</p><p class="font-bold tabular">${num(disp)} ${esc(m.um)}</p></div>
+          <div><p class="text-ink-400">Costo unitario</p><p class="font-medium tabular">${money(m.cu)}</p></div>
+          <div><p class="text-ink-400">En reserva en curso</p><p class="font-medium tabular">${num(car)} ${esc(m.um)}</p></div>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-ink-600">Orden de mantenimiento <span class="text-ink-400 font-normal">(solo ${CONFIG.ESTADO_ASIGNABLE})</span></label>
+          ${o ? `<div class="mt-1 flex items-center gap-2 border border-brand-200 bg-brand-50/50 rounded-lg px-3 py-2">
+              <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink-900">${esc(o.orden)} · ${esc(o.texto)}</p><p class="text-[11px] text-ink-500 truncate">${esc(o.denom)} · ${esc(o.ubic)}</p></div>
+              <button onclick="window.__amCambiar()" class="text-xs text-brand-700 font-medium hover:underline">Cambiar</button></div>`
+            : `<div class="mt-1">${acHTML('acOrd','Buscar orden, equipo o texto…')}</div>`}
+        </div>
+        <div>
+          <label class="text-xs font-medium text-ink-600">Cantidad (${esc(m.um)})</label>
+          <input id="amCant" type="number" inputmode="decimal" min="0" step="any" value="${car||''}" placeholder="0" class="${selCls} mt-1" oninput="window.__amCalc()">
+          <p id="amCalc" class="text-[11px] text-ink-500 mt-1"></p>
+        </div>
+        ${CART.items.length && CART.orden && ordenSel && CART.orden!==ordenSel ? `<p class="text-[11px] text-amber-700 bg-amber-50 rounded-lg px-3 py-2">La reserva en curso es de la OTM ${esc(CART.orden)}. Si continúas, toda la reserva en curso (${CART.items.length} materiales) pasará a la OTM ${esc(ordenSel)}.</p>`:''}
+        <div class="flex flex-col sm:flex-row gap-2 pt-1">
+          <button onclick="window.__amAgregar(false)" class="flex-1 px-4 py-2.5 rounded-lg border border-brand-200 text-brand-700 text-sm font-medium hover:bg-brand-50">Agregar y seguir eligiendo</button>
+          <button onclick="window.__amAgregar(true)" class="flex-1 px-4 py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium">Agregar y revisar reserva</button>
+        </div>
+      </div>`, pintar, 'max-w-lg');
+    window.__amCalc();
+  };
+  window.__amCambiar = () => { ordenSel = ''; pintar(); setTimeout(()=>document.getElementById('acOrd')?.focus(), 50); };
+  window.__amCalc = () => {
+    const c = Number(document.getElementById('amCant')?.value) || 0, disp = disponible(codigo), el = document.getElementById('amCalc');
+    if(!el) return;
+    el.innerHTML = c > disp ? `<span class="text-red-600 font-medium">Supera el disponible (${num(disp)} ${esc(m.um)})</span>` : c > 0 ? `Costo estimado: <b>${money(c*m.cu)}</b>` : '';
+  };
+  window.__amAgregar = (revisar) => {
+    if(!ordenSel){ toast('Elige la orden de mantenimiento', 'error'); document.getElementById('acOrd')?.focus(); return; }
+    if(!esAsignable(ORD_MAP[ordenSel])){ toast(`La orden ${ordenSel} no está en estado ${CONFIG.ESTADO_ASIGNABLE}`, 'error'); return; }
+    const c = round3(Number(document.getElementById('amCant').value) || 0);
+    if(!(c > 0)){ toast('Ingresa una cantidad mayor a 0', 'error'); return; }
+    if(c > disponible(codigo)){ toast(`Solo hay ${num(disponible(codigo))} ${m.um} disponibles`, 'error'); return; }
+    if(CART.orden !== ordenSel){ CART.orden = ordenSel; CART.token = ''; }
+    const it = CART.items.find(x=>x.codigo===codigo);
+    if(it) it.cantidad = c; else CART.items.push({codigo, cantidad:c});
+    guardarCart();
+    toast(`${m.desc.slice(0,40)} → OTM ${ordenSel}`, 'info');
+    if(revisar) abrirCarrito(); else cerrarModal();
+  };
+  pintar();
+}
+
+/* =========================================================
+   RESERVA EN CURSO (carrito)
+   ========================================================= */
+function guardarCart(){ lsSet('mq_cart', CART); paintCartBar(); }
+function paintCartBar(){
+  const n = CART.items.length;
+  const b = document.getElementById('cartBadge');
+  b.textContent = n; b.classList.toggle('hidden', !n); b.classList.toggle('flex', !!n);
+  const bar = document.getElementById('cartBar');
+  if(!n || document.getElementById('modalRoot').innerHTML){ bar.classList.add('hidden'); return; }
+  const total = CART.items.reduce((s,it)=> s + it.cantidad * ((STOCK_MAP[it.codigo]||{}).cu||0), 0);
+  const o = ORD_MAP[CART.orden];
+  bar.classList.remove('hidden');
+  bar.innerHTML = `<button onclick="abrirCarrito()" class="w-full flex items-center gap-3 bg-ink-900 text-white rounded-xl shadow-pop px-4 py-3 text-left">
+    <span class="w-9 h-9 rounded-lg bg-brand-500 flex items-center justify-center font-bold">${n}</span>
+    <span class="min-w-0 flex-1"><span class="block text-sm font-semibold truncate">Reserva en curso · OTM ${esc(CART.orden||'sin elegir')}</span>
+    <span class="block text-[11px] text-ink-300 truncate">${esc(o?o.denom:'')} · ${money(total)}</span></span>
+    <span class="text-xs font-semibold text-brand-300 whitespace-nowrap">Revisar →</span></button>`;
+}
+function asignarAOrden(orden){
+  const o = ORD_MAP[orden];
+  if(!esAsignable(o)){ toast(`Solo se asignan materiales a órdenes ${CONFIG.ESTADO_ASIGNABLE}`, 'error'); return; }
+  if(CART.items.length && CART.orden && CART.orden !== orden){
+    confirmar(`Tienes una reserva en curso para la OTM <b>${esc(CART.orden)}</b> con ${CART.items.length} material(es).<br><br>¿Descartarla y empezar una nueva para la OTM <b>${esc(orden)}</b>?`, 'Empezar nueva', true)
+      .then(ok=>{ if(ok){ CART = {orden, items:[], token:''}; guardarCart(); abrirCarrito(); } });
+    return;
+  }
+  if(CART.orden !== orden){ CART.orden = orden; CART.token = ''; guardarCart(); }
+  abrirCarrito();
+}
+let guardando = false;
+function abrirCarrito(){
+  const pintar = () => {
+    const o = ORD_MAP[CART.orden];
+    AC.acMat = {items: itemsMateriales, vacio: STOCK_OK ? 'Sin materiales con disponible que coincidan' : 'Cargando stock…', onPick: v=>{ agregarItem(v); }};
+    AC.acOrdC = {items: itemsOrdenesLib, vacio:`Sin órdenes ${CONFIG.ESTADO_ASIGNABLE} que coincidan`, onPick: v=>{ CART.orden = v; CART.token=''; guardarCart(); pintar(); }};
+    let total = 0, hayError = false;
+    const filas = CART.items.map((it, i)=>{
+      const m = STOCK_MAP[it.codigo] || {desc:'(material sin stock en MB52)', um:'', cu:0};
+      const disp = disponible(it.codigo), sub = it.cantidad * (m.cu||0);
+      const err = !(it.cantidad > 0) || it.cantidad > disp;
+      if(err) hayError = true;
+      total += sub;
+      return `<div class="flex items-center gap-2 py-2.5 border-b border-ink-50">
+        <div class="min-w-0 flex-1"><p class="text-sm font-medium text-ink-800 truncate">${esc(m.desc)}</p>
+          <p class="text-[11px] ${err?'text-red-600 font-medium':'text-ink-400'}">${esc(it.codigo)} · disp. ${num(disp)} ${esc(m.um)} · ${money(m.cu)}/${esc(m.um)}</p></div>
+        <input type="number" inputmode="decimal" min="0" step="any" value="${it.cantidad}" onchange="setCantidad(${i}, this.value)" class="w-20 rounded-lg border ${err?'border-red-300':'border-ink-200'} px-2 py-1.5 text-sm text-right tabular">
+        <span class="w-24 text-right text-sm font-semibold tabular">${money(sub)}</span>
+        <button onclick="quitarItem(${i})" class="p-1.5 text-ink-400 hover:text-red-600" aria-label="Quitar">${IC.trash}</button></div>`;
+    }).join('');
+    abrirModal(`${modalHeader('Reserva de materiales', 'Asigna materiales del stock a una orden de mantenimiento')}
+      <div class="p-5 space-y-4">
+        <div>
+          <label class="text-xs font-medium text-ink-600">Orden de mantenimiento <span class="text-ink-400 font-normal">(solo ${CONFIG.ESTADO_ASIGNABLE})</span></label>
+          ${o ? `<div class="mt-1 flex items-center gap-2 border ${esAsignable(o)?'border-brand-200 bg-brand-50/50':'border-red-200 bg-red-50'} rounded-lg px-3 py-2">
+              <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink-900 flex flex-wrap items-center gap-2">${esc(o.orden)} ${badgeTipo(o.tipo)} ${badgeEstadoOrden(o)}</p>
+              <p class="text-xs text-ink-700">${esc(o.texto)}</p><p class="text-[11px] text-ink-500 truncate">${esc(o.equipo)} · ${esc(o.denom)} · ${esc(o.ubic)}</p></div>
+              <button onclick="CART.orden='';CART.token='';guardarCart();refrescarModal()" class="text-xs text-brand-700 font-medium hover:underline">Cambiar</button></div>`
+            : `<div class="mt-1">${acHTML('acOrdC','Buscar orden, equipo o texto…')}</div>`}
+        </div>
+        <div>
+          <label class="text-xs font-medium text-ink-600">Agregar material del stock</label>
+          <div class="mt-1">${acHTML('acMat','Buscar por código o descripción…')}</div>
+        </div>
+        <div>
+          ${CART.items.length ? filas : `<div class="text-center text-xs text-ink-400 py-6 border border-dashed border-ink-200 rounded-lg">Aún no hay materiales en esta reserva</div>`}
+          ${CART.items.length ? `<div class="flex justify-between items-center pt-3"><span class="text-xs text-ink-500">${CART.items.length} material(es)</span><span class="text-base font-bold text-ink-900 tabular">Total ${money(total)}</span></div>`:''}
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div><label class="text-xs font-medium text-ink-600">Solicitante *</label>
+            <input id="cSol" value="${esc(SOLICITANTE)}" onchange="SOLICITANTE=this.value.trim();lsSet('mq_solicitante',SOLICITANTE)" placeholder="Nombre de quien solicita" class="${selCls} mt-1"></div>
+          <div><label class="text-xs font-medium text-ink-600">Comentario</label>
+            <input id="cCom" value="${esc(CART.comentario||'')}" onchange="CART.comentario=this.value;guardarCart()" placeholder="Opcional" class="${selCls} mt-1"></div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 pt-1">
+          ${CART.items.length?`<button onclick="vaciarCarrito()" class="px-4 py-2.5 rounded-lg border border-ink-200 text-sm text-ink-500 hover:bg-ink-50">Vaciar</button>`:''}
+          <button data-guardar ${(!CART.items.length||hayError||!o)?'disabled':''} onclick="registrarReserva(false)" class="sm:ml-auto px-4 py-2.5 rounded-lg border border-brand-200 text-brand-700 text-sm font-medium hover:bg-brand-50 disabled:opacity-40">Solo registrar</button>
+          <button data-guardar ${(!CART.items.length||hayError||!o)?'disabled':''} onclick="registrarReserva(true)" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium disabled:opacity-40">${iconWhatsapp()} Registrar y enviar por WhatsApp</button>
+        </div>
+        ${hayError?`<p class="text-[11px] text-red-600">Hay cantidades que superan el disponible o son 0. Corrígelas para registrar.</p>`:''}
+      </div>`, pintar);
+    if(!o) setTimeout(()=>document.getElementById('acOrdC')?.focus(), 60);
+  };
+  pintar();
+  cargarStock(60000);
+}
+function agregarItem(codigo){
+  const m = STOCK_MAP[codigo]; if(!m) return;
+  if(!CART.items.find(x=>x.codigo===codigo)) CART.items.push({codigo, cantidad: Math.min(1, disponible(codigo))});
+  guardarCart(); refrescarModal();
+  setTimeout(()=>{ const ins = document.querySelectorAll('#modalPanel input[type=number]'); const i = CART.items.findIndex(x=>x.codigo===codigo); if(ins[i]){ ins[i].focus(); ins[i].select(); } }, 50);
+}
+function setCantidad(i, v){ CART.items[i].cantidad = round3(Number(v)||0); guardarCart(); refrescarModal(); }
+function quitarItem(i){ CART.items.splice(i,1); guardarCart(); refrescarModal(); }
+async function vaciarCarrito(){ if(await confirmar('¿Vaciar la reserva en curso?', 'Vaciar', true)){ CART = {orden:CART.orden, items:[], token:''}; guardarCart(); refrescarModal(); } }
+function setGuardando(v){ guardando = v; document.querySelectorAll('[data-guardar]').forEach(b=>{ b.disabled = v; if(v) b.dataset.txt = b.innerHTML, b.innerHTML = 'Guardando…'; else if(b.dataset.txt) b.innerHTML = b.dataset.txt; }); }
+function registrarReserva(enviarWA){
+  if(guardando) return;
+  const sol = (document.getElementById('cSol')?.value || '').trim();
+  const com = (document.getElementById('cCom')?.value || '').trim();
+  if(!sol){ toast('Indica el nombre del solicitante', 'error'); document.getElementById('cSol')?.focus(); return; }
+  SOLICITANTE = sol; lsSet('mq_solicitante', sol);
+  const o = ORD_MAP[CART.orden];
+  if(!esAsignable(o)){ toast(`Solo se asignan materiales a órdenes ${CONFIG.ESTADO_ASIGNABLE}`, 'error'); return; }
+  if(!CART.token){ CART.token = uid(); guardarCart(); }
+  // La ventana de WhatsApp se abre YA (dentro del clic) para que el navegador no la bloquee
+  const win = enviarWA ? window.open('', '_blank') : null;
+  setGuardando(true);
+  apiPost('registrar_reserva', {orden:CART.orden, solicitante:sol, comentario:com, token:CART.token, items:CART.items.map(it=>({material:it.codigo, cantidad:it.cantidad}))})
+    .then(d=>{
+      const nuevas = d.lineas || [];
+      const ids = new Set(RESERVAS.map(r=>r.id));
+      nuevas.forEach(l=>{ if(!ids.has(l.id)) RESERVAS.push(l); });
+      recalcular();
+      lsSet('mq_cache_core', {ordenes:ORDENES, reservas:RESERVAS, estadoAsignable:CONFIG.ESTADO_ASIGNABLE});
+      toast(`Reserva ${d.reserva} registrada · ${nuevas.length} material(es)`);
+      if(enviarWA){ const url = urlWhatsApp(mensajeReserva(d.reserva)); if(win) win.location.href = url; else window.location.href = url; }
+      CART = {orden:'', items:[], token:''}; guardarCart();
+      cerrarModal();
+    })
+    .catch(err=>{ if(win) win.close(); toast('No se pudo registrar: '+err.message, 'error'); cargarStock(); })
+    .finally(()=> setGuardando(false));
+}
+
+/* =========================================================
+   WHATSAPP
+   ========================================================= */
+function urlWhatsApp(texto){ const n = String(CONFIG.WHATSAPP_NUMERO||'').replace(/\D/g,''); return `https://wa.me/${n}?text=${encodeURIComponent(texto)}`; }
+function mensajeReserva(reservaId){
+  const lineas = RESERVAS.filter(r=>r.reserva===reservaId);
+  if(!lineas.length) return '';
+  const r = lineas[0];
+  const activas = lineas.filter(activa);
+  const total = activas.reduce((s,l)=>s+l.total,0);
+  const l = [
+    `🧰 *Reserva de materiales · Mantenimiento Maquinaria*`,
+    `🆔 *Reserva:* ${reservaId}`,
+    `📋 *OTM:* ${r.orden} — ${r.texto}`,
+    `🏷️ *Tipo:* ${r.tipo} (${r.clase})`,
+    `⚙️ *Equipo:* ${r.equipo} · ${r.denom}`,
+    `📍 *Ubicación:* ${r.ubic}`,
+    `👷 *Solicitante:* ${r.solicitante}`,
+    `📅 *Fecha:* ${fmtDateTime(r.fecha)}`,
+    `📦 *Materiales (${activas.length}):*`,
+  ];
+  lineas.forEach(x=> l.push(`▫️ ${x.material} - ${x.desc} — Cant: ${num(x.cantidad)} ${x.um} — ${money(x.total)}${x.estado!=='Pendiente'?` [${x.estado}]`:''}`));
+  l.push(`💰 *Total:* ${money(total)}`);
+  if(r.comentario) l.push(`📝 *Comentario:* ${r.comentario}`);
+  return l.join('\n');
+}
+function reenviarReserva(id){ const t = mensajeReserva(id); if(t) window.open(urlWhatsApp(t), '_blank'); }
+
+window.addEventListener('beforeunload', e=>{ if(guardando){ e.preventDefault(); e.returnValue=''; } });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !document.getElementById('confirmRoot').innerHTML && document.getElementById('modalRoot').innerHTML && !document.querySelector('.ac-list:not(.hidden)')) cerrarModal(); });
+initApp();
+</script>
+</body>
+</html>
